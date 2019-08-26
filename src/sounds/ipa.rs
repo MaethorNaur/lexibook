@@ -58,7 +58,6 @@ pub enum Articulation {
     Back,
 }
 
-#[repr(C)]
 #[derive(Debug)]
 pub struct IPASound {
     pub type_of_sound: Type,

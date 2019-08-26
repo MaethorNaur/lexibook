@@ -14,15 +14,15 @@ log = "0.4.8"
 env_logger = "0.6.2"
 strum = "0.15.0"
 strum_macros = "0.15.0"
-docx = "0.1.2"
-markdown = "0.2.0"
-lopdf = "0.23.0"
-radix_trie = "0.1"
+# docx = "0.1.2"
+# markdown = "0.2.0"
+# lopdf = "0.23.0"
+# radix_trie = "0.1"
 
-[dependencies.zip]
-version = "0.5"
-default-features = false
-features = ["deflate"]
+# [dependencies.zip]
+# version = "0.5"
+# default-features = false
+# features = ["deflate"]
 
 [build-dependencies]
 cbindgen = "0.9.0"
