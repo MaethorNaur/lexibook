@@ -21,12 +21,12 @@ args = ["build","--release"]
 
 [tasks.copy-lib]
 command = "cp"
-args = ["target/debug/liblexibook.a","../Mac/Lexibook/lib/"]
+args = ["target/debug/liblexibook.a","../macos/Lexibook/lib/"]
 dependencies = ["build"]
 
 [tasks.copy-lib-release]
 command = "cp"
-args = ["target/release/liblexibook.a","../Mac/Lexibook/lib/"]
+args = ["target/release/liblexibook.a","../macos/Lexibook/lib/"]
 dependencies = ["build-release"]
 
 [tasks.copy-header]
