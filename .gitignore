@@ -1,0 +1,58 @@
+*.a
+*.h
+*.class
+*.log
+Bin/
+obj/
+xcuserdata/
+# sbt specific
+.cache/
+.history/
+.lib/
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+
+# Scala-IDE specific
+.scala_dependencies
+.worksheet
+
+#Intellij
+.idea
+*.iml
+
+#mac
+.DS_Store
+
+#project
+
+#node
+
+node_modules/
+npm-debug.log
+
+
+#project
+
+build/
+assets/js/scalajs-output*.js
+assets/js/scalajs-output*.js.map
+
+
+#Added by cargo
+#
+#already existing elements are commented out
+
+/target
+**/*.rs.bk
+
+
+#Added by cargo
+#
+#already existing elements are commented out
+
+#/target
+#**/*.rs.bk
