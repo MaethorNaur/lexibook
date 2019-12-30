@@ -1,91 +1,110 @@
-use nom::types::CompleteStr;
-use nom::{alpha, not_line_ending, space};
-use std::str;
+use super::types::*;
+use std::collections::HashMap;
+use std::fs;
 
-use super::ast::*;
+use pest::Parser;
 
-fn vec_join(vec: Vec<&str>) -> &str {
-    Box::leak(vec.join("").into_boxed_str())
+#[derive(Parser)]
+#[grammar = "wgl.pest"]
+struct WGLParser;
+
+#[derive(Debug)]
+pub struct AST<'a> {
+    pub imports: Vec<&'a str>,
+    pub letters: Vec<Letter<'a>>,
+    pub classes: HashMap<&'a str, Vec<&'a str>>,
+    pub syllables: Vec<Vec<&'a str>>,
 }
-fn to_string(input: CompleteStr) -> &str {
-    input.0
+
+#[derive(Debug)]
+pub enum Letter<'a> {
+    WithPhoneticNotation(&'a str, Vec<&'a str>),
+    OnlyRepresensation(&'a str),
 }
 
-named!(semi_column<CompleteStr,()>, do_parse!(
-    opt!(space)>>
-    char!(':')>>
-    opt!(space)>>
-    ()
-));
+impl<'a> Letter<'a> {
+    pub fn to_string(&self) -> &'a str {
+        match self {
+            Letter::OnlyRepresensation(s) => s,
+            Letter::WithPhoneticNotation(s, _) => s,
+        }
+    }
+}
 
-named!(syllable<CompleteStr,Syllable>,
-    alt!(
-        value!(Syllable::Optional,char!('?'))|
-        map_opt!(take!(1), |s: CompleteStr|
-            s.0.chars().next().filter(|c|c.is_uppercase()).map(Syllable::Class) )|
-        map!(alpha, |s| Syllable::Sound(to_string(s)))
-    )
-);
-named!(words_expr<CompleteStr, Expr>,
-    do_parse!(
-        tag!("words") >>
-        semi_column >>
-        syllables: ws!(many1!(many1!(syllable))) >>
-        (Expr::Words(syllables))
-    )
-);
+pub fn from_file(filename: &'_ str) -> Result<AST, Error<Rule>> {
+    let input = Box::leak(
+        fs::read_to_string(filename)
+            .or_else(|e| Err(Error::IO(e)))?
+            .into_boxed_str(),
+    );
+    from_string(input)
+}
 
-named!(letter<CompleteStr,(&str, &str)>,
-   do_parse!(
-        opt!(space)>>
-        letter: alpha >>
-        semi_column >>
-        sounds: alpha >>
-        opt!(space)>>
-        ((letter.0, sounds.0))
-    )
-);
-named!(letter_expr<CompleteStr,Expr>,
-    do_parse!(
-        tag!("letters") >>
-        semi_column >>
-        letters: ws!(separated_list!(char!(','), letter)) >>
-        (Expr::Letters(letters))
-    )
-);
+pub fn from_string(input: &'_ str) -> Result<AST, Error<Rule>> {
+    let pairs = WGLParser::parse(Rule::wgl, &input).map_err(Error::Parse)?;
+    debug!("{:#?}", pairs);
+    let mut ast = AST {
+        imports: vec![],
+        letters: vec![],
+        classes: HashMap::new(),
+        syllables: vec![],
+    };
+    for pair in pairs {
+        let rule = pair.as_rule();
+        match rule {
+            Rule::import => ast.imports = build_imports(pair),
+            Rule::letters => ast.letters = build_letters(pair),
+            Rule::class => {
+                let (name, values) = build_class(pair);
+                ast.classes.insert(name, values);
+            }
+            Rule::syllables => ast.syllables = build_syllables(pair),
+            _ => {}
+        }
+    }
 
-named!(class_expr<CompleteStr,Expr>,
-    do_parse!(
-        class: map!(
-            many1!(map!(alt!(alpha|tag!("_")),to_string)),
-            vec_join
-         ) >>
-        opt!(space) >>
-        char!('=') >>
-        opt!(space) >>
-        letters: separated_list!(char!(' '), map!(alpha, |s| s.0)) >>
-        (Expr::Class(&class,letters))
-    )
-);
-named!(comments<CompleteStr,Expr>,
-    do_parse!(
-        char!('%') >>
-        many0!(not_line_ending) >>
-        (Expr::Comments)
-    )
-);
-named!(expr_choice<CompleteStr,Expr>,
-    alt!(
-        comments |
-        letter_expr|
-        words_expr |
-        class_expr
-    )
-);
-named!(pub do_parse<CompleteStr,Vec<Expr>>,
-    do_parse!(
-        exprs: ws!(many0!(expr_choice)) >>
-        eof!() >>
-        (exprs)
-    )
-);
+    Ok(ast)
+}
+
+fn build_imports(pair: pest::iterators::Pair<'_, Rule>) -> Vec<&'_ str> {
+    pair.into_inner().map(|r| r.as_str()).collect()
+}
+
+#[allow(irrefutable_let_patterns)]
+fn build_letters(pair: pest::iterators::Pair<'_, Rule>) -> Vec<Letter<'_>> {
+    let pairs = pair.into_inner();
+    let mut letters = vec![];
+    for pair in pairs {
+        if let _ = Rule::letter_sound {
+            let mut letter_sound = pair.into_inner();
+            let represensation = letter_sound.next().unwrap().as_str();
+            let sounds: Vec<_> = letter_sound.map(build_sound).collect();
+            let letter = if sounds.is_empty() {
+                Letter::OnlyRepresensation(represensation)
+            } else {
+                Letter::WithPhoneticNotation(represensation, sounds)
+            };
+            letters.push(letter)
+        }
+    }
+    letters
+}
+
+fn build_sound(pair: pest::iterators::Pair<'_, Rule>) -> &'_ str {
+    pair.as_str()
+}
+
+fn build_syllables(pair: pest::iterators::Pair<'_, Rule>) -> Vec<Vec<&'_ str>> {
+    pair.into_inner().map(build_words).collect()
+}
+
+fn build_words(pair: pest::iterators::Pair<'_, Rule>) -> Vec<&'_ str> {
+    pair.into_inner().map(|p| p.as_str()).collect()
+}
+
+fn build_class(pair: pest::iterators::Pair<'_, Rule>) -> (&'_ str, Vec<&'_ str>) {
+    let mut pairs = pair.into_inner();
+    let class_name = pairs.next().unwrap().as_str();
+    let letters: Vec<_> = pairs.map(|p| p.as_str()).collect();
+    (class_name, letters)
+}

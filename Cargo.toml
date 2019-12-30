@@ -3,17 +3,21 @@ name = "lexibook"
 version = "0.1.0"
 authors = ["Pedro Mangabeira <pedro@2aworld.tech>"]
 edition = "2018"
+publish = false
 build = "build.rs"
+
 [lib]
 name = "lexibook"
 crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
-nom = "4.2.3"
 log = "0.4.8"
 env_logger = "0.6.2"
-strum = "0.15.0"
-strum_macros = "0.15.0"
+pest = "2.1.2"
+pest_derive = "2.1.0"
+rand = "0.7"
+clap = {version = "2.33", features = ["yaml"]}
+prettytable-rs = "^0.8"
 # docx = "0.1.2"
 # markdown = "0.2.0"
 # lopdf = "0.23.0"
@@ -25,4 +29,4 @@ strum_macros = "0.15.0"
 # features = ["deflate"]
 
 [build-dependencies]
-cbindgen = "0.9.0"
+cbindgen = "0.12.0"

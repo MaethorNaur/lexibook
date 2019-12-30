@@ -1,0 +1,53 @@
+wgl = _{ SOI ~ NEWLINE* ~ 
+  (import ~ NEWLINE+)? ~ 
+  (letters ~ NEWLINE+)? ~ 
+  (class ~ NEWLINE+)* ~ 
+  (syllables ~ NEWLINE+)? ~ 
+  (rules ~ NEWLINE*)? ~ 
+  EOI
+}
+
+import = { ^"import" ~ ":" ~ file ~ file* }
+
+file = @{ (ASCII_ALPHA_UPPER ~ ":\\" )? ~ relative_or_parent? ~ filename ~ (separator_file ~ relative_or_parent? ~ filename )*  }
+relative_or_parent = @{"."{1,2} ~ separator_file}
+separator_file = _{"\\" | "/"}
+
+filename = @{ ASCII_ALPHANUMERIC ~ (ASCII_ALPHANUMERIC | "_" | "-" | ".")* }
+
+letters = { ^"letters" ~ ":" ~ letter_sound ~ ("," ~ NEWLINE* ~ letter_sound)* }
+letter_sound = { letter ~ (":" ~ phonetic_notation+)? }
+letter = @{ (!(NEWLINE | WHITESPACE | ":" | ",") ~ ANY)+ }
+
+syllables = { ^"syllables" ~ ":"  ~ words  ~ words* }
+words = ${ word  ~ word* }
+word = ${ UPPERCASE_LETTER ~ "?"? }
+
+class = { class_name ~ "=" ~ letter+}
+class_name = {UPPERCASE_LETTER}
+phonetic_notation = {  
+ ASCII_ALPHA_LOWER | 
+  "ˈ" | "ˌ" | "ː" |"ˑ"| "\u{306}" |
+  "|" | "‖" | "↗" | "↘" |
+  "\u{30B}" | "˥" | "\u{301}" | "˦" | "\u{304}" | "˧" | "\u{300}" | "˨" | "\u{30F}" | "˩" | "\u{30C}" | "\u{302}" | "ꜛ" | "ꜜ" |
+  "."| "ʙ" |"ʀ" |"ⱱ" | "ɾ" | "ɽ" | "ɕ" | "ʑ" | "ç" | "ʝ" | "ɣ" | "χ" | "ʁ" | "ħ" | "ʕ" | "ɦ" | "ɬ" | "ɮ" | "ʋ" | "ɰ" | "ɭ" | "ʎ" | "ʟ" | "ɺ" |
+  "ɨ" | "ʉ" | "ɯ" | "ɪ" | "ʏ" | "ø" | "ɘ" | "ɵ" | "ɤ" | "ə" | "ɛ" | "œ" | "ɜ" | "ɞ" | "ʌ" | "ɔ" | "æ" | "ɐ" | "ɶ" | "ɑ" | "ɒ" |
+  "ɱ" | "ɳ" | "ŋ" | "ɴ" | "ʈ" | "ɖ" | "ɟ" | "ɢ" |
+  "ʡ" | "ʔ" | "ʃ" | "ʒ" | "ʂ" | "ʐ" | "ɸ" | "β" | "θ" | "ð" | "ɹ" | "ɻ" |
+  "ˤ" | "ⁿ" | "ˡ" | "ᶿ" | "ˣ" | "ᵊ" | "ʱ" | "ʷ" | "ʲ" | "ˠ" | "ɚ" | "\u{33D}" |
+  "\u{32C}" | "\u{324}" | "\u{330}" | "\u{32A}" | "\u{33C}" | "\u{33A}" | "\u{33B}" | "\u{31F}" | "\u{2D6}" | "\u{320}" | "\u{2D7}" | "\u{308}" | "\u{31D}" | "\u{2D4}" |
+  "\u{31E}" | "\u{2D5}" | "\u{329}" | "\u{339}" | "\u{31C}" | "\u{334}" | "\u{318}" | "\u{318}" | "\u{319}" | "\u{303}" | "\u{2DE}" | "\u{30A}" |  "\u{325}"
+}
+
+rules = { ^"rules" ~ ":" ~ NEWLINE* ~ rule ~ (NEWLINE+ ~ rule)* }
+
+rule = { environment ~ ":" ~ input ~ "->" ~ output?  }
+environment = ${ word_separator? ~ class_or_letter* ~ "_" ~ expand? ~ class_or_letter*  }
+expand = { "*" }
+word_separator = { "#" }
+class_or_letter = _{ class_name | phonetic_notation }
+input = @{ (!(NEWLINE | WHITESPACE | "->") ~ ANY)+ } 
+output = @{ (!(NEWLINE | WHITESPACE)  ~ ANY)+ } 
+
+WHITESPACE =  _{ " " | "\t" } 
+COMMENT = _{ "%" ~ (!NEWLINE ~ ANY)* } 

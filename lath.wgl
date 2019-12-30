@@ -1,0 +1,12 @@
+import:  std-assimilations ./src/test
+letters: l, a, b, d, th:θ, e, o, y, ja:ja, wa:wa, je:je, we:we, jo:jo, wo:wo, m, n, p, t, c, g, x
+
+C = l th m n p t b d c g x
+V = a e o y ja wa je we jo wo 
+R = l
+
+syllables: CV V RV
+
+rules:
+_ : l ->
+bV_V: t -> d 
