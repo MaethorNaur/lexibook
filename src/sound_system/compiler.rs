@@ -1,7 +1,9 @@
 use super::distribution::frequency;
 use super::phone::*;
 use super::SoundSystem;
-use crate::wgl::{Letter, AST};
+use crate::wgl::{Environment, Letter, TransformationRule, AST};
+use regex::Regex;
+use std::collections::HashMap;
 use std::convert::TryFrom;
 
 impl<'a> SoundSystem<'a> {
@@ -34,13 +36,18 @@ impl<'a> SoundSystem<'a> {
         for (class_name, letters) in ast.classes {
             classes.insert(class_name, letters);
         }
-
+        sound_system.rules = ast
+            .rules
+            .iter()
+            .map(|rule| (rule.to_string(), rule_to_regex(classes, rule), rule.output))
+            .collect::<Vec<_>>();
         sound_system.syllables = ast.syllables.clone();
+        debug!("Sound system compiled: {:#?}", sound_system);
         sound_system
     }
 }
 
-fn convert_ipa_letters_to_sounds<'a>(letter: &Letter<'a>) -> Vec<Phone> {
+fn convert_ipa_letters_to_sounds(letter: &Letter<'_>) -> Vec<Phone> {
     let mut sounds = vec![];
     match letter {
         Letter::OnlyRepresensation(s) => sounds.push(Phone::try_from(*s).unwrap()),
@@ -52,6 +59,53 @@ fn convert_ipa_letters_to_sounds<'a>(letter: &Letter<'a>) -> Vec<Phone> {
     sounds
 }
 
+fn rule_to_regex(classes: &HashMap<&'_ str, Vec<&'_ str>>, rule: &TransformationRule<'_>) -> Regex {
+    let mut regex = String::new();
+    let mut input = String::from("(?P<input>");
+    rule.input.chars().for_each(|c| match c {
+        c if c.is_uppercase() => {
+            let class_name = c.to_string();
+            if let Some(letters) = classes.get(&class_name as &str) {
+                input.push_str("(?P<");
+                input.push(c);
+                input.push('>');
+                let choice = letters
+                    .iter()
+                    .map(|s| (*s).to_string())
+                    .collect::<Vec<_>>()
+                    .join("|");
+                input.push_str(&choice);
+                input.push(')');
+            };
+        }
+        c => input.push(c),
+    });
+    input.push(')');
+    match rule.environment {
+        Environment::All => regex.push_str(&input),
+        Environment::Match(pattern) => pattern.chars().enumerate().for_each(|(index, c)| match c {
+            '#' if index == 0 => regex.push('^'),
+            '#' => regex.push('$'),
+            class if class.is_uppercase() => {
+                let class_name = c.to_string();
+                if let Some(letters) = classes.get(&class_name as &str) {
+                    regex.push('(');
+                    let choice = letters
+                        .iter()
+                        .map(|s| (*s).to_string())
+                        .collect::<Vec<_>>()
+                        .join("|");
+                    regex.push_str(&choice);
+                    regex.push(')');
+                };
+            }
+            '_' => regex.push_str(&input),
+            '*' => regex.push_str(".*?"),
+            letter => regex.push(letter),
+        }),
+    }
+    Regex::new(&regex).unwrap()
+}
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -42,11 +42,12 @@ phonetic_notation = {
 rules = { ^"rules" ~ ":" ~ NEWLINE* ~ rule ~ (NEWLINE+ ~ rule)* }
 
 rule = { environment ~ ":" ~ input ~ "->" ~ output?  }
-environment = ${ word_separator? ~ class_or_letter* ~ "_" ~ expand? ~ class_or_letter*  }
+environment = ${ word_separator? ~ class_or_letter* ~ "_" ~ expand? ~ class_or_letter*  ~ word_separator? }
 expand = { "*" }
 word_separator = { "#" }
 class_or_letter = _{ class_name | phonetic_notation }
-input = @{ (!(NEWLINE | WHITESPACE | "->") ~ ANY)+ } 
+
+input= @{ (!(NEWLINE | WHITESPACE | "->" | "#") ~ ANY)+ } 
 output = @{ (!(NEWLINE | WHITESPACE)  ~ ANY)+ } 
 
 WHITESPACE =  _{ " " | "\t" } 

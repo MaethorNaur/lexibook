@@ -1,5 +1,7 @@
 #![allow(non_snake_case)]
 
+extern crate regex;
+
 extern crate pest;
 extern crate rand;
 #[macro_use]
@@ -7,5 +9,14 @@ extern crate pest_derive;
 #[macro_use]
 extern crate log;
 
-pub mod sound_system;
-pub mod wgl;
+mod sound_system;
+mod wgl;
+pub use sound_system::{phone, MonoSyllableRepartition, SoundSystem, Transformation};
+pub use wgl::{Error, Rule};
+
+pub fn from_file(filename: &'_ str) -> Result<SoundSystem<'_>, Error<wgl::Rule>> {
+    wgl::from_file(filename).map(SoundSystem::compile)
+}
+pub fn from_string(input: &'_ str) -> Result<SoundSystem<'_>, Error<wgl::Rule>> {
+    wgl::from_string(input).map(SoundSystem::compile)
+}

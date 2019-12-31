@@ -14,12 +14,47 @@ pub struct AST<'a> {
     pub letters: Vec<Letter<'a>>,
     pub classes: HashMap<&'a str, Vec<&'a str>>,
     pub syllables: Vec<Vec<&'a str>>,
+    pub rules: Vec<TransformationRule<'a>>,
 }
 
 #[derive(Debug)]
 pub enum Letter<'a> {
     WithPhoneticNotation(&'a str, Vec<&'a str>),
     OnlyRepresensation(&'a str),
+}
+
+#[derive(Debug)]
+pub struct TransformationRule<'a> {
+    pub environment: Environment<'a>,
+    pub input: &'a str,
+    pub output: Option<&'a str>,
+}
+
+#[derive(Debug)]
+pub enum Environment<'a> {
+    All,
+    Match(&'a str),
+}
+
+#[allow(clippy::inherent_to_string)]
+impl<'a> TransformationRule<'a> {
+    pub fn to_string(&self) -> String {
+        let mut string = String::from(self.environment.to_string());
+        string.push_str(": ");
+        string.push_str(self.input);
+        string.push_str(" -> ");
+        string.push_str(self.output.unwrap_or_else(|| ""));
+        string
+    }
+}
+
+impl<'a> Environment<'a> {
+    pub fn to_string(&self) -> &'a str {
+        match self {
+            Environment::All => "_",
+            Environment::Match(s) => s,
+        }
+    }
 }
 
 impl<'a> Letter<'a> {
@@ -42,12 +77,13 @@ pub fn from_file(filename: &'_ str) -> Result<AST, Error<Rule>> {
 
 pub fn from_string(input: &'_ str) -> Result<AST, Error<Rule>> {
     let pairs = WGLParser::parse(Rule::wgl, &input).map_err(Error::Parse)?;
-    debug!("{:#?}", pairs);
+    trace!("WGL parsed AST: {:#?}", pairs);
     let mut ast = AST {
         imports: vec![],
         letters: vec![],
         classes: HashMap::new(),
         syllables: vec![],
+        rules: vec![],
     };
     for pair in pairs {
         let rule = pair.as_rule();
@@ -59,9 +95,12 @@ pub fn from_string(input: &'_ str) -> Result<AST, Error<Rule>> {
                 ast.classes.insert(name, values);
             }
             Rule::syllables => ast.syllables = build_syllables(pair),
+            Rule::rules => ast.rules = build_rules(pair),
             _ => {}
         }
     }
+
+    trace!("AST: {:#?}", ast);
 
     Ok(ast)
 }
@@ -88,6 +127,33 @@ fn build_letters(pair: pest::iterators::Pair<'_, Rule>) -> Vec<Letter<'_>> {
         }
     }
     letters
+}
+
+fn build_rules(pair: pest::iterators::Pair<'_, Rule>) -> Vec<TransformationRule<'_>> {
+    pair.into_inner().map(build_rule).collect()
+}
+
+fn build_rule(pair: pest::iterators::Pair<'_, Rule>) -> TransformationRule<'_> {
+    let mut pairs = pair.into_inner();
+    let environment = pairs.next().map(build_environment).unwrap();
+    let input = pairs.next().map(build_input_output).unwrap();
+    let output = pairs.next().map(build_input_output);
+    TransformationRule {
+        environment,
+        input,
+        output,
+    }
+}
+
+fn build_environment(pair: pest::iterators::Pair<'_, Rule>) -> Environment<'_> {
+    match pair.as_str() {
+        "_" => Environment::All,
+        match_rule => Environment::Match(match_rule),
+    }
+}
+
+fn build_input_output(pair: pest::iterators::Pair<'_, Rule>) -> &'_ str {
+    pair.as_str()
 }
 
 fn build_sound(pair: pest::iterators::Pair<'_, Rule>) -> &'_ str {
