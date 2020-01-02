@@ -1,3 +1,35 @@
+cfg_if::cfg_if! {
+    if #[cfg(feature = "wasm")] {
+
+use wasm_bindgen::prelude::*;
+#[wasm_bindgen]
+#[repr(u8)]
+#[derive(Debug)]
+pub enum MonoSyllableRepartition {
+    Always,
+    Mostly,
+    Frequent,
+    LessFrequent,
+    Rare,
+    Never,
+}
+
+    } else {
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum MonoSyllableRepartition {
+    Always,
+    Mostly,
+    Frequent,
+    LessFrequent,
+    Rare,
+    Never,
+}
+
+    }
+}
+
 use rand::prelude::*;
 use regex::{Captures, Regex};
 use std::collections::HashMap;
@@ -12,17 +44,6 @@ pub use compiler::*;
 pub struct Transformation {
     pub output: Vec<String>,
     pub history: Vec<(String, Vec<String>)>,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum MonoSyllableRepartition {
-    Always,
-    Mostly,
-    Frequent,
-    LessFrequent,
-    Rare,
-    Never,
 }
 
 #[derive(Debug)]
