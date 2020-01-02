@@ -1,6 +1,8 @@
 #![allow(non_snake_case)]
-
+extern crate cfg_if;
 extern crate regex;
+#[cfg(feature = "wasm")]
+extern crate wasm_bindgen;
 
 extern crate pest;
 extern crate rand;
