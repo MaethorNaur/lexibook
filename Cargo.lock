@@ -373,7 +373,7 @@ dependencies = [
 
 [[package]]
 name = "lexibook-cli"
-version = "0.2.2"
+version = "0.2.3-alpha.0"
 dependencies = [
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lexibook 0.2.3-alpha.0",
