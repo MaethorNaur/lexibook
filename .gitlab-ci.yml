@@ -4,6 +4,7 @@ cache:
     paths:
     - $HOME/.cargo/
     - target/
+
 stages: 
  - test
  - build
@@ -16,23 +17,31 @@ stages:
   - cargo test --verbose
 
 test:stable:
+  except:
+    - tags
   image: "rust:latest"
   <<: *cargo_test
 
 
 lint:rustfmt:
+  except:
+    - tags
   stage: test
   image: "guangie88/rustfmt-clippy:stable"
   script:
     - cargo fmt -- --check
 
 lint:clippy:
+  except:
+    - tags
   stage: test
   image: "guangie88/rustfmt-clippy:stable"
   script:
     - cargo clippy --all-features -- -D warnings # Turn all warnings into errors
 
 build:wasm:
+  except:
+    - tags
   stage: build
   image: "rust:latest"
   only:
@@ -47,6 +56,8 @@ build:wasm:
     paths:
       - wasm/pkg/ 
 pages:
+  except:
+    - tags
   only:
     - master
   stage: deploy
