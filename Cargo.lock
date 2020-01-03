@@ -384,7 +384,7 @@ dependencies = [
 
 [[package]]
 name = "lexibook-ffi"
-version = "0.2.2"
+version = "0.2.3-alpha.0"
 dependencies = [
  "cbindgen 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
