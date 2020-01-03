@@ -1,0 +1,43 @@
+name: lexibook
+version: "1.0"
+author: Pedro Mangabeira <pedro@2aworld.tech>
+about: Generate words and apply sounds transformations
+args:
+  - numbers:
+      short: n
+      long: numbers
+      value_name: NUMBERS
+      help: numbers of words to generate
+      takes_value: true
+  - syllable:
+      short: s
+      long: syllable
+      value_name: REPARTITION
+      help: Repartition of mono syllable words. Default to "less_frequent"
+      takes_value: true
+      possible_values:
+        - always
+        - mostly
+        - frequent
+        - less_frequent
+        - rare
+        - never
+  - debug:
+      short: d
+      long: debug
+      help: "Once: Debug, Twice: Trace"
+      multiple: true
+  - skip_transformation:
+      short: t
+      long: skip-transformation
+      help: Not apply sound transformation
+  - output:
+      short: o
+      long: output
+      value_name: FILE
+      help: file where the words will be outputed
+      takes_value: true
+  - FILE:
+      help: Word generation file definition
+      required: true
+      index: 1

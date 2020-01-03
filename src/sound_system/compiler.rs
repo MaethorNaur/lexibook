@@ -2,7 +2,6 @@ use super::distribution::frequency;
 use super::phone::*;
 use super::SoundSystem;
 use crate::wgl::{Environment, Letter, TransformationRule, AST};
-use regex::Regex;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 
@@ -59,7 +58,10 @@ fn convert_ipa_letters_to_sounds(letter: &Letter<'_>) -> Vec<Phone> {
     sounds
 }
 
-fn rule_to_regex(classes: &HashMap<&'_ str, Vec<&'_ str>>, rule: &TransformationRule<'_>) -> Regex {
+fn rule_to_regex(
+    classes: &HashMap<&'_ str, Vec<&'_ str>>,
+    rule: &TransformationRule<'_>,
+) -> String {
     let mut regex = String::new();
     let mut input = String::from("(?P<input>");
     rule.input.chars().for_each(|c| match c {
@@ -104,7 +106,7 @@ fn rule_to_regex(classes: &HashMap<&'_ str, Vec<&'_ str>>, rule: &Transformation
             letter => regex.push(letter),
         }),
     }
-    Regex::new(&regex).unwrap()
+    regex
 }
 #[cfg(test)]
 mod tests {

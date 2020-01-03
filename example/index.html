@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Hello wasm-pack!</title>
+  </head>
+  <body>
+    <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
+    <form action="#">
+      <fieldset>
+        <textarea id="input" rows="10" cols="100">
+import:  std-assimilations ./src/test
+letters: l, a, b, d, th:θ, e, o, y, ja:ja, wa:wa, je:je, we:we, jo:jo, wo:wo, m, n, p, t, c:k, g, x
+
+C = l th m n p t b d c g x
+V = a e o y ja wa je we jo wo
+R = l
+S = p t g
+Z = b d g
+syllables: CV V RV
+
+rules:
+_#: l ->
+V_V: S -> Z
+</textarea>
+      </fieldset>
+      <fieldset>
+        <legend>Repartition</legend>
+        <input type="range" id="words" name="words" min="1" max="100" value="10" /><label for="words">Words</label> <br/ >
+        <input type="radio" name="repartition" value="Always" id="Always"/><label for="Always">Always</label><br />
+        <input type="radio" name="repartition" value="Mostly" id="Mostly"/><label for="Mostly">Mostly</label><br />
+        <input type="radio" name="repartition" value="Frequent" id="Frequent" /><label for="Frequent">Frequent</label><br />
+        <input type="radio" name="repartition" value="LessFrequent" id="LessFrequent" checked="checked"/><label for="LessFrequent">LessFrequent</label><br />
+        <input type="radio" name="repartition" value="Rare" id="Rare" /><label for="Rare">Rare</label><br />
+        <input type="radio" name="repartition" value="Never" id="Never" /><label for="Never">Never</label><br />
+      </fieldset>
+      <hr />
+      <fieldset>
+        <button id="gen" type="button">Generate</button>
+      </fieldset>
+    </form>
+    <hr />
+    <div id="error" style="color:red;font-weight: bold"></div>
+    <script src="./bootstrap.js"></script>
+  </body>
+</html>

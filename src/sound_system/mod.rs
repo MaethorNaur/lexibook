@@ -1,58 +1,33 @@
 cfg_if::cfg_if! {
     if #[cfg(feature = "wasm")] {
-
-use wasm_bindgen::prelude::*;
-#[wasm_bindgen]
-#[repr(u8)]
-#[derive(Debug)]
-pub enum MonoSyllableRepartition {
-    Always,
-    Mostly,
-    Frequent,
-    LessFrequent,
-    Rare,
-    Never,
-}
-
+mod wasm;
+pub use wasm::MonoSyllableRepartition;
     } else {
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum MonoSyllableRepartition {
-    Always,
-    Mostly,
-    Frequent,
-    LessFrequent,
-    Rare,
-    Never,
-}
-
+mod shared;
+pub use shared::MonoSyllableRepartition;
     }
 }
 
+use crate::wgl;
+use pest::error::Error;
+
 use rand::prelude::*;
-use regex::{Captures, Regex};
 use std::collections::HashMap;
 use std::str::FromStr;
 
 mod compiler;
 mod distribution;
 pub mod phone;
+pub mod rules;
 pub use compiler::*;
 
-#[derive(Debug, Default)]
-pub struct Transformation {
-    pub output: Vec<String>,
-    pub history: Vec<(String, Vec<String>)>,
-}
-
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct SoundSystem<'a> {
     classes: HashMap<&'a str, Vec<&'a str>>,
     phonemes: HashMap<&'a str, phone::Phones>,
     syllables: Vec<Vec<&'a str>>,
     distribution: Vec<(&'a str, f64)>,
-    rules: Vec<(String, Regex, Option<&'a str>)>,
+    rules: Vec<(String, String, Option<&'a str>)>,
 }
 
 impl MonoSyllableRepartition {
@@ -67,6 +42,7 @@ impl MonoSyllableRepartition {
         }
     }
 }
+
 impl FromStr for MonoSyllableRepartition {
     type Err = &'static str;
 
@@ -81,6 +57,10 @@ impl FromStr for MonoSyllableRepartition {
             _ => Err("no match"),
         }
     }
+}
+
+pub fn from_string(input: &'_ str) -> Result<SoundSystem<'_>, Error<wgl::Rule>> {
+    wgl::from_string(input).map(SoundSystem::compile)
 }
 
 impl<'a> SoundSystem<'a> {
@@ -119,72 +99,6 @@ impl<'a> SoundSystem<'a> {
             }
         }
         words
-    }
-
-    pub fn sound_trasformation(&self, words: Vec<String>) -> Transformation {
-        let mut history: Vec<(String, Vec<String>)> = vec![];
-        let output = self
-            .rules
-            .iter()
-            .fold(words, |words, (name, rule, replacement)| {
-                let mut output = vec![];
-                for word in &words {
-                    output.push(self.apply_rule(rule, replacement, word));
-                }
-                history.push((name.to_string(), output.clone()));
-                output
-            });
-        Transformation { output, history }
-    }
-
-    fn apply_rule(&self, rule: &Regex, replacement: &Option<&'_ str>, word: &'_ str) -> String {
-        let capture_names = rule.capture_names().filter_map(|c| c).collect::<Vec<_>>();
-        let result = rule.replace_all(word, |capture: &Captures| {
-            let mut result = String::from(&capture[1]);
-            match capture_names.len() {
-                1 => result.push_str(replacement.unwrap_or("")),
-                _ => {
-                    let to_replace = capture_names
-                        .iter()
-                        .filter(|c| !c.eq_ignore_ascii_case("input"))
-                        .map(|class| {
-                            self.classes
-                                .get(class)
-                                .and_then(|letters| {
-                                    let letter = capture.name(class).unwrap().as_str();
-                                    letters.iter().position(|l| *l == letter)
-                                })
-                                .unwrap()
-                        })
-                        .collect::<Vec<_>>();
-                    debug!("{:#?}", to_replace);
-                    let mut i = 0;
-                    replacement
-                        .map(|value| {
-                            value.chars().for_each(|c| match c {
-                                c if c.is_uppercase() => {
-                                    if let Some(position) = to_replace.get(i) {
-                                        let class_name = c.to_string();
-                                        if let Some(letters) = self.classes.get(&class_name as &str)
-                                        {
-                                            if let Some(letter) = letters.get(*position) {
-                                                debug!("{:#?}", letter);
-                                                result.push_str(letter);
-                                                i += 1;
-                                            }
-                                        }
-                                    }
-                                }
-                                _ => result.push(c),
-                            })
-                        })
-                        .unwrap_or_else(|| ());
-                }
-            }
-            result.push_str(&capture[capture.len() - 1]);
-            result
-        });
-        result.to_string()
     }
 
     fn syllable(&self) -> String {

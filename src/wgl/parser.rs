@@ -1,7 +1,6 @@
-use super::types::*;
 use std::collections::HashMap;
-use std::fs;
 
+use pest::error::Error;
 use pest::Parser;
 
 #[derive(Parser)]
@@ -66,17 +65,8 @@ impl<'a> Letter<'a> {
     }
 }
 
-pub fn from_file(filename: &'_ str) -> Result<AST, Error<Rule>> {
-    let input = Box::leak(
-        fs::read_to_string(filename)
-            .or_else(|e| Err(Error::IO(e)))?
-            .into_boxed_str(),
-    );
-    from_string(input)
-}
-
 pub fn from_string(input: &'_ str) -> Result<AST, Error<Rule>> {
-    let pairs = WGLParser::parse(Rule::wgl, &input).map_err(Error::Parse)?;
+    let pairs = WGLParser::parse(Rule::wgl, &input)?;
     trace!("WGL parsed AST: {:#?}", pairs);
     let mut ast = AST {
         imports: vec![],

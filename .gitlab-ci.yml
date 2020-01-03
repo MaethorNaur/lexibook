@@ -4,8 +4,12 @@ cache:
     paths:
     - $HOME/.cargo/
     - target/
-    
+stages: 
+ - test
+ - build
+ - deploy   
 .cargo_test_template: &cargo_test
+  stage: test
   script:
   - rustc --version && cargo --version
   - cargo build
@@ -16,14 +20,46 @@ test:stable:
   <<: *cargo_test
 
 
-# Always want to run rustfmt and clippy against our tests, to ensure that
-# we aren't using any anti-patterns or failing to follow our style guide
 lint:rustfmt:
+  stage: test
   image: "guangie88/rustfmt-clippy:stable"
   script:
     - cargo fmt -- --check
 
 lint:clippy:
+  stage: test
   image: "guangie88/rustfmt-clippy:stable"
   script:
-    - cargo clippy -- -D warnings # Turn all warnings into errors
+    - cargo clippy --all-features -- -D warnings # Turn all warnings into errors
+
+build:wasm:
+  stage: build
+  image: "rust:latest"
+  only:
+    - master
+  before_script:
+    - rustup target add wasm32-unknown-unknown
+    - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+  script:
+    - wasm-pack build -- --features wasm  --no-default-features
+  artifacts:
+    paths:
+      - pkg/ 
+pages:
+  only:
+    - master
+  stage: deploy
+  image: node
+  dependencies:
+    - build:wasm
+  script:
+    - cd example
+    - npm i
+    - npm run build
+    - cd ../
+    - mkdir public
+    - mv example/dist/* public/
+  artifacts:
+    paths:
+      - public
+
