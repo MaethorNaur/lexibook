@@ -1,24 +1,28 @@
 #![allow(non_snake_case)]
+#[macro_use]
+extern crate serde_derive;
 extern crate cfg_if;
 extern crate regex;
-#[cfg(feature = "wasm")]
-extern crate wasm_bindgen;
 
 extern crate pest;
 extern crate rand;
 #[macro_use]
 extern crate pest_derive;
+
 #[macro_use]
 extern crate log;
 
 mod sound_system;
 mod wgl;
-pub use sound_system::{phone, MonoSyllableRepartition, SoundSystem, Transformation};
-pub use wgl::{Error, Rule};
 
-pub fn from_file(filename: &'_ str) -> Result<SoundSystem<'_>, Error<wgl::Rule>> {
-    wgl::from_file(filename).map(SoundSystem::compile)
-}
-pub fn from_string(input: &'_ str) -> Result<SoundSystem<'_>, Error<wgl::Rule>> {
-    wgl::from_string(input).map(SoundSystem::compile)
+cfg_if::cfg_if! {
+    if #[cfg(feature = "wasm")] {
+mod wasm;
+pub use wasm::*;
+    } else {
+#[macro_use]
+extern crate lazy_static;
+pub mod ffi;
+pub use ffi::*;
+    }
 }

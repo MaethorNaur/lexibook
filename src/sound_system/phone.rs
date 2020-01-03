@@ -1,13 +1,14 @@
 use std::convert::{Into, TryFrom};
 pub type Phones = Vec<Phone>;
-#[derive(Debug, Eq, PartialEq)]
+
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub enum Phone {
     Consonant(Consonant),
     Vowel(Vowel),
     Diacritic(PhoneProperty),
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub struct Vowel {
     pub height: Height,
     pub backness: Backness,
@@ -15,7 +16,7 @@ pub struct Vowel {
     pub properties: Vec<PhoneProperty>,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub enum Height {
     Close,
     NearClose,
@@ -26,28 +27,28 @@ pub enum Height {
     Open,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub enum Backness {
     Front,
     Central,
     Back,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub enum Roundness {
     Rounded,
     UnRounded,
     Undefined,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub struct Consonant {
     pub place: ConsonantPlace,
     pub manner: ConsonantManner,
     pub properties: Vec<PhoneProperty>,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub enum ConsonantPlace {
     Bilabial,
     LabioDental,
@@ -62,7 +63,7 @@ pub enum ConsonantPlace {
     Glotal,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub enum ConsonantManner {
     Stop,
     Nasal,
@@ -76,7 +77,7 @@ pub enum ConsonantManner {
     LateralTap,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub enum PhoneProperty {
     ConsonantRelease(ConsonantRelease),
     Phonation(Phonation),
@@ -87,7 +88,7 @@ pub enum PhoneProperty {
     Intonation(Intonation),
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub enum ConsonantRelease {
     Aspirated,
     NoAudible,
@@ -98,7 +99,7 @@ pub enum ConsonantRelease {
     MidCentralVowel,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub enum Phonation {
     Voiced,
     Voiceless,
@@ -106,7 +107,7 @@ pub enum Phonation {
     CreakyVoiced,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub enum Articulation {
     Dental,
     Linguolabial,
@@ -120,7 +121,7 @@ pub enum Articulation {
     MidCentralized,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub enum CoArticulation {
     MoreRounded,
     LessRounded,
@@ -135,7 +136,7 @@ pub enum CoArticulation {
     Rhoticity,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub enum Rhythm {
     PrimaryStress,
     SecondaryStress,
@@ -144,7 +145,7 @@ pub enum Rhythm {
     ExtraShort,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub enum Intonation {
     MinorBreak,
     MajorBreak,
@@ -152,7 +153,7 @@ pub enum Intonation {
     GlobalFall,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub enum Tone {
     Top,
     Upstep,
