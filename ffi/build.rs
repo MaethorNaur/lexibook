@@ -15,4 +15,3 @@ fn main() {
         .unwrap()
         .write_to_file(out_dir.join("lexibook.h"));
 }
-
