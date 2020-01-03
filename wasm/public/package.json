@@ -33,7 +33,7 @@
     "webpack-dev-server": "^3.1.5"
   },
   "dependencies": {
-    "css-loader": "^3.4.0",
+    "css-loader": "^3.4.1",
     "lexibook-wasm": "file:../pkg",
     "style-loader": "^1.1.2",
     "vanilla-datatables": "^1.6.16"

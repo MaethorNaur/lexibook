@@ -1,0 +1,15 @@
+[package]
+name = "lexibook-cli"
+version = "0.2.2"
+authors = ["Pedro Mangabeira <pedro@2aworld.tech>"]
+edition = "2018"
+publish = false
+license = "MIT"
+repository = "https://gitlab.com/lexibook/lexibook"
+
+[dependencies]
+lexibook = {path="../library"}
+log = "0.4.8"
+prettytable-rs = "^0.8"
+clap = {version = "2.33", features = ["yaml"]}
+simple_logger = "1.4.0"

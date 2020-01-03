@@ -1,49 +1,10 @@
-[package]
-name = "lexibook"
-version = "0.2.2"
-authors = ["Pedro Mangabeira <pedro@2aworld.tech>"]
-edition = "2018"
-publish = false
-license = "MIT"
-repository = "https://gitlab.com/lexibook/lexibook"
-
-[lib]
-crate-type = ["cdylib", "rlib", "staticlib"]
-
-[features]
-default = ["simple_logger", "prettytable-rs", "clap"]
-wasm = ["rand/wasm-bindgen", "wasm-bindgen", "wasm-logger"]
-
-[dependencies]
-log = "0.4.8"
-pest = "2.1.2"
-pest_derive = "2.1.0"
-rand = "0.7"
-regex = "1"
-cfg-if = "0.1.10"
-serde = "1"
-serde_derive = "1"
-lazy_static = "1.4.0"
-
-prettytable-rs = {version = "^0.8", optional = true}
-clap = {version = "2.33", features = ["yaml"], optional = true}
-simple_logger = {version = "1.4.0", optional = true}
-wasm-bindgen = {version = "0.2", features = ["serde-serialize"], optional = true}
-wasm-logger = {version = "0.2", optional = true}
-console_error_panic_hook = { version = "0.1.1", optional = true }
-
-[dev-dependencies]
-wasm-bindgen-test = "0.2"
-
-# docx = "0.1.2"
-# markdown = "0.2.0"
-# lopdf = "0.23.0"
-# radix_trie = "0.1"
-
-# [dependencies.zip]
-# version = "0.5"
-# default-features = false
-# features = ["deflate"]
+[workspace]
+members = [
+  "library",
+  "cli",
+  "ffi",
+  "wasm"
+]
 
 [profile.release]
 opt-level = "s"
