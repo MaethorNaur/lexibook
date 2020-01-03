@@ -1,8 +1,15 @@
+#![allow(non_snake_case)]
+#[macro_use]
+extern crate log;
+
+#[macro_use]
+extern crate lazy_static;
+extern crate pest;
 extern crate simple_logger;
 
-use crate::sound_system;
-use crate::sound_system::{MonoSyllableRepartition, SoundSystem};
-use crate::wgl::Rule;
+use lexibook::sound_system;
+use lexibook::sound_system::{MonoSyllableRepartition, SoundSystem};
+use lexibook::wgl::Rule;
 use log::Level;
 use pest::error::Error;
 use std::ffi::{CStr, CString};

@@ -41,10 +41,11 @@ build:wasm:
     - rustup target add wasm32-unknown-unknown
     - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
   script:
-    - wasm-pack build -- --features wasm  --no-default-features
+    - cd wasm
+    - wasm-pack build
   artifacts:
     paths:
-      - pkg/ 
+      - wasm/pkg/ 
 pages:
   only:
     - master
@@ -53,12 +54,12 @@ pages:
   dependencies:
     - build:wasm
   script:
-    - cd example
+    - cd wasm/public
     - npm i
     - npm run build
-    - cd ../
-    - mkdir -p public
-    - mv example/dist/* public/
+    - cd ../../
+    - rm -rf public
+    - mv wasm/public/dist public/
   artifacts:
     paths:
       - public

@@ -1,0 +1,21 @@
+[package]
+name = "lexibook-wasm"
+version = "0.2.2"
+authors = ["Pedro Mangabeira <pedro@2aworld.tech>"]
+edition = "2018"
+publish = false
+license = "MIT"
+repository = "https://gitlab.com/lexibook/lexibook"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+lexibook = {path="../library", features= ["wasm"]}
+log = "0.4.8"
+wasm-bindgen = {version = "0.2", features = ["serde-serialize"]}
+wasm-logger = "0.2"
+console_error_panic_hook = { version = "0.1.1", optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.2"

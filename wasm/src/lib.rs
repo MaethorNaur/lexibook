@@ -5,8 +5,8 @@ extern crate wasm_bindgen;
 
 use wasm_bindgen::prelude::*;
 mod utils;
-use crate::sound_system;
-use crate::sound_system::rules;
+use lexibook::sound_system;
+use lexibook::sound_system::rules;
 
 #[wasm_bindgen(start)]
 pub fn main() {

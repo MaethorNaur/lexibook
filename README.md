@@ -11,7 +11,7 @@ cargo build --bins --release
 ### Install
 
 ```bash
-cargo install --bins --path .
+cargo install --force --path cli
 ```
 
 ## FFI
@@ -27,8 +27,9 @@ cargo build --lib --release
 ### Build
 
 ```bash
-wasm-pack build -- --features wasm --no-default-features
-cd example
+cd wasm
+wasm-pack build
+cd public
 yarn install
 npm run start
 ```

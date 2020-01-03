@@ -1,22 +1,9 @@
-#[macro_use]
-extern crate serde_derive;
-
-extern crate cfg_if;
 extern crate prettytable;
-extern crate regex;
-
-extern crate pest;
-extern crate rand;
-#[macro_use]
-extern crate pest_derive;
 #[macro_use]
 extern crate log;
 extern crate simple_logger;
-
 #[macro_use]
 extern crate clap;
-mod sound_system;
-mod wgl;
 
 use clap::App;
 use log::Level;
@@ -26,8 +13,8 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
-use sound_system::rules;
-use sound_system::MonoSyllableRepartition;
+use lexibook::sound_system::rules;
+use lexibook::sound_system::MonoSyllableRepartition;
 
 pub fn main() {
     let yaml = load_yaml!("cli.yml");
@@ -48,7 +35,7 @@ pub fn main() {
         .unwrap_or(MonoSyllableRepartition::LessFrequent);
     let maybe_output = matches.value_of("output");
     let input = Box::leak(fs::read_to_string(filename).unwrap().into_boxed_str());
-    match sound_system::from_string(input) {
+    match lexibook::sound_system::from_string(input) {
         Ok(sound_system) => {
             let words = sound_system.generate_words(numbers, repartition);
             let transformations = if skip_transformation {
