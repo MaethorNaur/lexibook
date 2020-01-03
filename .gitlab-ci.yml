@@ -57,7 +57,7 @@ pages:
     - npm i
     - npm run build
     - cd ../
-    - mkdir public
+    - mkdir -p public
     - mv example/dist/* public/
   artifacts:
     paths:
