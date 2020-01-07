@@ -1,9 +1,9 @@
 [workspace]
 members = [
-  "library",
-  "cli",
-  "ffi",
-  "wasm"
+  "src/core",
+  "src/cli",
+  "src/ffi",
+  "src/wasm"
 ]
 
 [profile.release]
