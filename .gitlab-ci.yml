@@ -19,6 +19,7 @@ stages:
 test:stable:
   except:
     - tags
+    - master
   image: "rust:latest"
   <<: *cargo_test
 
@@ -26,6 +27,7 @@ test:stable:
 lint:rustfmt:
   except:
     - tags
+    - master
   stage: test
   image: "guangie88/rustfmt-clippy:stable"
   script:
@@ -34,6 +36,7 @@ lint:rustfmt:
 lint:clippy:
   except:
     - tags
+    - master
   stage: test
   image: "guangie88/rustfmt-clippy:stable"
   script:
