@@ -57,7 +57,7 @@ build:wasm:
     - wasm-pack build
   artifacts:
     paths:
-      - wasm/pkg/ 
+      - src/wasm/pkg/ 
 pages:
   except:
     - tags
