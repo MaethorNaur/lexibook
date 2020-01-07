@@ -56,6 +56,7 @@ build:wasm:
     - cd src/wasm
     - wasm-pack build
   artifacts:
+    expire_in: 1h
     paths:
       - src/wasm/pkg/ 
 pages:
