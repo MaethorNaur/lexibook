@@ -1,6 +1,6 @@
 [package]
 name = "lexibook-ffi"
-version = "0.2.4"
+version = "0.2.5-alpha.0"
 authors = ["Pedro Mangabeira <pedro@2aworld.tech>"]
 edition = "2018"
 publish = false
