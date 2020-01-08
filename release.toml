@@ -2,7 +2,7 @@ consolidate-commits = true
 disable-publish = true
 pre-release-commit-message = "[skip ci]\nRelease {{version}}"
 post-release-commit-message = "[skip ci]\nStart next development iteration {{next_version}}"
-
+tag-prefix=""
 pre-release-replacements = [
   {file="README.md", search="Current release: [a-z0-9\\.-]+", replace="Current release: {{version}}"} ,
   {file="CHANGELOG.md", search="Unreleased", replace="{{version}}"},
