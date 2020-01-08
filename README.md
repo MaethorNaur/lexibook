@@ -1,5 +1,7 @@
 # Lexibook
 
+Current release: 0.2.3
+
 ## CLI
 
 ### Build
