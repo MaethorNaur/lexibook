@@ -43,12 +43,10 @@ lint:clippy:
     - cargo clippy --all-features -- -D warnings # Turn all warnings into errors
 
 build:wasm:
-  except:
-    - tags
   stage: build
   image: "rust:latest"
   only:
-    - master
+    - tags
   before_script:
     - rustup target add wasm32-unknown-unknown
     - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
@@ -60,10 +58,8 @@ build:wasm:
     paths:
       - src/wasm/pkg/ 
 pages:
-  except:
-    - tags
   only:
-    - master
+    - tags
   stage: deploy
   image: node
   dependencies:
