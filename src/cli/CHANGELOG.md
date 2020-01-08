@@ -7,4 +7,3 @@
 
 <!-- next-url -->
 [Unreleased]: https://gitlab.com/lexibook/lexibook/compare/lexibook-cli-v0.2.5...HEAD
-[0.2.5]: https://gitlab.com/lexibook/lexibook/compare/lexibook-cli-v0.2.4...lexibook-cli-v0.2.5

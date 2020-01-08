@@ -1,8 +1,6 @@
 consolidate-commits = true
 disable-publish = true
 no-dev-version = true
-tag-message = "{{prefix}}v{{version}}"
-tag-name = "{{prefix}}v{{version}}"
 pre-release-commit-message = "[skip ci]\nRelease {{version}}"
 pre-release-replacements = [
   {file="README.md", search="Current release: [a-z0-9\\.-]+", replace="Current release: {{version}}"} ,

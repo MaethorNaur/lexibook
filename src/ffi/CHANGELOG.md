@@ -7,4 +7,3 @@
 
 <!-- next-url -->
 [Unreleased]: https://gitlab.com/lexibook/lexibook/compare/lexibook-ffi-v0.2.5...HEAD
-[0.2.5]: https://gitlab.com/lexibook/lexibook/compare/lexibook-ffi-v0.2.4...lexibook-ffi-v0.2.5
