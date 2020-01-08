@@ -20,13 +20,15 @@ pub fn main() {
     let yaml = load_yaml!("cli.yml");
     let matches = App::from_yaml(yaml).get_matches();
     let filename = matches.value_of("FILE").unwrap();
-
-    let level = match matches.occurrences_of("debug") {
-        0 => Level::Warn,
-        1 => Level::Debug,
-        _ => Level::Trace,
-    };
-    simple_logger::init_with_level(level).unwrap();
+    if matches.is_present("verbose") {
+        let level = match matches.occurrences_of("verbose") {
+            1 => Level::Warn,
+            2 => Level::Info,
+            3 => Level::Debug,
+            _ => Level::Trace,
+        };
+        simple_logger::init_with_level(level).unwrap();
+    }
 
     let skip_transformation = matches.is_present("skip_transformation");
 
@@ -85,7 +87,7 @@ pub fn main() {
                                 ..
                             }) = transformations.history.get(rule)
                             {
-                                sound_system.updat_phoneme(diff);
+                                sound_system.update_phoneme(diff);
                                 let previous = if rule == 0 {
                                     word
                                 } else {

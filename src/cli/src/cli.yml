@@ -22,10 +22,12 @@ args:
         - less_frequent
         - rare
         - never
-  - debug:
-      short: d
-      long: debug
-      help: "Once: Debug, Twice: Trace"
+  - verbose:
+      short: v
+      long: verbose
+      help: Pass many times for more log output
+            By default, logging is off. Passing `-v` one time also prints warnings, `-vv` enables info logging,
+            `-vvv` debug, and `-vvvv` trace.
       multiple: true
   - skip_transformation:
       short: t

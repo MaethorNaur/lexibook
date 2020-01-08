@@ -108,7 +108,7 @@ impl SoundSystem {
     fn add_phonemes(&mut self, repr: &'_ str, phones: phone::Phones) {
         self.phonemes.insert(repr.to_string(), phones);
     }
-    pub fn updat_phoneme(&mut self, diff: &rules::Diff) {
+    pub fn update_phoneme(&mut self, diff: &rules::Diff) {
         match diff {
             rules::Diff::Skip => (),
             rules::Diff::Delete(repr) => {
