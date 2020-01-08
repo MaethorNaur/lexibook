@@ -1,4 +1,5 @@
 consolidate-commits = true
+disable-publish = true
 pre-release-commit-message = "[skip ci]\nrelease {{version}}"
 post-release-commit-message = "[skip ci]\nReleased {{version}}, starting {{next_version}}"
 pre-release-replacements = [
