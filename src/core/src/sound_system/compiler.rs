@@ -1,6 +1,6 @@
 use super::distribution::frequency;
 use super::phone::*;
-use super::{PhonemeRule, Rule, SoundRule, SoundSystem};
+use super::{PhonemeDifference, PhonemeRule, Rule, SoundRule, SoundSystem};
 use crate::wgl::{Environment, Letter, TransformationRule, AST};
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -45,15 +45,15 @@ impl SoundSystem {
                 TransformationRule::SoundRule(_) => Rule::SoundRule(SoundRule {
                     name: rule.to_string(),
                     regex: rule_to_regex(classes, rule),
-                    replacement: rule.output().map(|s| s.to_owned()),
+                    replacement: rule.output().map(|s| s.to_string()),
                 }),
                 TransformationRule::PhonemeRule(_) => Rule::PhonemeRule(PhonemeRule {
                     name: rule.to_string(),
-                    phoneme: rule.input().to_string(),
-                    phones: rule
-                        .output()
-                        .map(|o| o.chars().filter_map(|c| Phone::try_from(c).ok()).collect())
-                        .unwrap_or_else(|| vec![]),
+                    phoneme_differences: rule_to_phoneme_differences(
+                        classes,
+                        rule.input(),
+                        rule.output(),
+                    ),
                 }),
             })
             .collect::<Vec<_>>();
@@ -62,9 +62,74 @@ impl SoundSystem {
             .iter()
             .map(|l| l.iter().map(|s| (*s).to_string()).collect())
             .collect();
-        debug!("Sound system compiled: {:#?}", sound_system);
+        trace!("Sound system compiled: {:#?}", sound_system);
         sound_system
     }
+}
+
+fn rule_to_phoneme_differences(
+    classes: &HashMap<String, Vec<String>>,
+    phoneme: &'_ str,
+    maybePhones: Option<&'_ str>,
+) -> Vec<PhonemeDifference> {
+    let expanded = expand(classes, phoneme);
+    trace!("phonemes expanded to: {:#?}", expanded);
+    match maybePhones {
+        None => expanded
+            .iter()
+            .map(|phoneme| PhonemeDifference::Delete(phoneme.to_string()))
+            .collect(),
+        Some(phones) => {
+            let expanded_phones = expand(classes, &phones);
+            expanded_phones
+                .iter()
+                .enumerate()
+                .filter_map(|(idx, phoneme)| {
+                    expanded_phones.get(idx).map(|phone_str| {
+                        let phones = phone_str
+                            .chars()
+                            .filter_map(|c| Phone::try_from(c).ok())
+                            .collect();
+                        PhonemeDifference::Upsert(phoneme.to_string(), phones)
+                    })
+                })
+                .collect()
+        }
+    }
+}
+
+fn expand(classes: &HashMap<String, Vec<String>>, s: &'_ str) -> Vec<String> {
+    s.chars()
+        .flat_map(|c| match c {
+            'Ṽ' => vec!['V', '\u{303}'],
+            'Ẽ' => vec!['E', '\u{303}'],
+            'Ỹ' => vec!['Y', '\u{303}'],
+            _ => vec![c],
+        })
+        .fold(vec![], |mut phonemes, c| {
+            if c.is_uppercase() {
+                match classes.get(&c.to_string()) {
+                    None => phonemes,
+                    Some(letters) => {
+                        if phonemes.is_empty() {
+                            letters.clone()
+                        } else {
+                            phonemes
+                                .iter()
+                                .flat_map(|s| letters.iter().map(move |l| format!("{}{}", s, l)))
+                                .collect()
+                        }
+                    }
+                }
+            } else {
+                if phonemes.is_empty() {
+                    phonemes.push(c.to_string())
+                } else {
+                    phonemes.iter_mut().for_each(|string| string.push(c))
+                };
+                phonemes
+            }
+        })
 }
 
 fn convert_ipa_letters_to_sounds(letter: &Letter<'_>) -> Vec<Phone> {

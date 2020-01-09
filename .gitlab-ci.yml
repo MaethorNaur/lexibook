@@ -9,20 +9,43 @@ stages:
  - test
  - build
  - deploy   
+
 .cargo_test_template: &cargo_test
   stage: test
+  before_script:
+    - apt-get update && apt-get install -y zip
+    - curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
+  image: "rustlang/rust:nightly"
+  variables:
+    CARGO_INCREMENTAL: "0" 
+    RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads"
   script:
-  - rustc --version && cargo --version
-  - cargo build
-  - cargo test --verbose
+    - cargo build
+    - cargo test 
+    - |
+      zip -0 ccov.zip `find . -name "lexibook*.gc*" -print`;
+      ./grcov ccov.zip --llvm --branch --ignore-not-existing --ignore "/*" -t coveralls --vcs-branch "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME" --token $COVERALL_TOKEN --service-job-number $CI_JOB_ID --service-name "grcov" --service-pull-request "$CI_MERGE_REQUEST_IID" --commit-sha $CI_COMMIT_SHA > coveralls.json;
+      curl -H "Authorization: token  $COVERALL_TOKEN" -F "json_file=@coveralls.json" -F "source_files=[@coveralls.json]" https://coveralls.io/api/v1/jobs 
 
 test:stable:
+  stage: test
   except:
     - tags
-    - master
   image: "rust:latest"
-  <<: *cargo_test
+  script:
+    - cargo build
+    - cargo test --verbose
 
+test:pr:coverage:
+  only:
+    - merge_requests
+  <<: *cargo_test
+ 
+test:coverage:
+  stage: test
+  only:
+    - master
+  <<: *cargo_test
 
 lint:rustfmt:
   except:

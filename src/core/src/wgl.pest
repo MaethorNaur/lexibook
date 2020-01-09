@@ -43,7 +43,7 @@ rules = { ^"rules" ~ ":" ~ NEWLINE* ~ rule ~ (NEWLINE+ ~ rule)* }
 
 rule = { sound_rule | phoneme_rule }
 sound_rule = { environment ~ ":" ~ input ~ "->" ~ output?  }
-phoneme_rule = { input ~ "~>" ~ (phonetic_notation+)?  }
+phoneme_rule = { input ~ "~>" ~ ((class_name | phonetic_notation)+)?  }
 environment = ${ word_separator? ~ class_or_letter* ~ "_" ~ expand? ~ class_or_letter*  ~ word_separator? }
 expand = { "*" }
 word_separator = { "#" }

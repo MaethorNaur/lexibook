@@ -1,5 +1,7 @@
 # Lexibook
 
+[![Coverage Status](https://coveralls.io/repos/gitlab/lexibook/lexibook/badge.svg?branch=master)](https://coveralls.io/gitlab/lexibook/lexibook?branch=master)
+
 ## CLI
 
 - [README](https://gitlab.com/lexibook/lexibook/blob/master/src/cli/README.md)
