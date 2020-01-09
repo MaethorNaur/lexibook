@@ -54,6 +54,8 @@ test:master:coverage:
   stage: test
   only:
     - master
+  except:
+    - tags
   <<: *cargo_test
 
 build:wasm:
