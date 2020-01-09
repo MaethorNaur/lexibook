@@ -21,11 +21,12 @@ stages:
     RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads"
   script:
     - rm -rf target/
+    - echo ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
     - cargo build
     - cargo test 
     - |
       zip -0 ccov.zip `find . -name "lexibook*.gc*" -print`;
-      ./grcov ccov.zip --llvm --branch --ignore-not-existing --ignore "/*" -t coveralls --vcs-branch "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME" --token $COVERALL_TOKEN --service-job-number $CI_JOB_ID --service-name "grcov" --service-pull-request "$CI_MERGE_REQUEST_IID" --commit-sha $CI_COMMIT_SHA > coveralls.json;
+      ./grcov ccov.zip --llvm --branch --ignore-not-existing --ignore "/*" -t coveralls --vcs-branch "${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}" --token $COVERALL_TOKEN --service-job-number $CI_JOB_ID --service-name "grcov" --service-pull-request "$CI_MERGE_REQUEST_IID" --commit-sha $CI_COMMIT_SHA > coveralls.json;
       curl -H "Authorization: token  $COVERALL_TOKEN" -F "json_file=@coveralls.json" -F "source_files=[@coveralls.json]" https://coveralls.io/api/v1/jobs 
 
 lint:rustfmt:
