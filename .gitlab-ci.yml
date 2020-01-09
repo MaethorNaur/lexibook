@@ -17,9 +17,10 @@ stages:
     - curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
   image: "rustlang/rust:nightly"
   variables:
-    CARGO_INCREMENTAL: "0" 
+    CARGO_INCREMENTAL: "0"
     RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads"
   script:
+    - rm -rf target/
     - cargo build
     - cargo test 
     - |
@@ -27,43 +28,32 @@ stages:
       ./grcov ccov.zip --llvm --branch --ignore-not-existing --ignore "/*" -t coveralls --vcs-branch "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME" --token $COVERALL_TOKEN --service-job-number $CI_JOB_ID --service-name "grcov" --service-pull-request "$CI_MERGE_REQUEST_IID" --commit-sha $CI_COMMIT_SHA > coveralls.json;
       curl -H "Authorization: token  $COVERALL_TOKEN" -F "json_file=@coveralls.json" -F "source_files=[@coveralls.json]" https://coveralls.io/api/v1/jobs 
 
-test:stable:
-  stage: test
-  except:
-    - tags
-  image: "rust:latest"
-  script:
-    - cargo build
-    - cargo test --verbose
-
-test:pr:coverage:
+lint:rustfmt:
   only:
     - merge_requests
-  <<: *cargo_test
- 
-test:coverage:
-  stage: test
-  only:
-    - master
-  <<: *cargo_test
-
-lint:rustfmt:
-  except:
-    - tags
-    - master
   stage: test
   image: "guangie88/rustfmt-clippy:stable"
   script:
     - cargo fmt -- --check
 
 lint:clippy:
-  except:
-    - tags
-    - master
+  only:
+    - merge_requests
   stage: test
   image: "guangie88/rustfmt-clippy:stable"
   script:
-    - cargo clippy --all-features -- -D warnings # Turn all warnings into errors
+    - cargo clippy --all-features -- -D warnings
+
+test:coverage:
+  only:
+    - merge_requests
+  <<: *cargo_test
+ 
+test:master:coverage:
+  stage: test
+  only:
+    - master
+  <<: *cargo_test
 
 build:wasm:
   stage: build
