@@ -1,3 +1,3 @@
 # Lexibook core
 
-Current release: 0.2.5
+Current release: 0.2.6

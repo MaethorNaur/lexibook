@@ -1,6 +1,6 @@
 [package]
 name = "lexibook"
-version = "0.2.6-alpha.0"
+version = "0.2.6"
 authors = ["Pedro Mangabeira <pedro@2aworld.tech>"]
 edition = "2018"
 publish = false
