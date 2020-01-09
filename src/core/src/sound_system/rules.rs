@@ -12,75 +12,58 @@ pub struct Transformation {
 pub struct History {
     pub rule: String,
     pub words: Vec<String>,
-    pub phonemes_changes: Diff,
 }
 
 #[derive(Debug, Serialize, Eq, PartialEq)]
 pub enum Diff {
     Skip,
     Delete(String),
-    Add(String, phone::Phones),
-    Update(String, phone::Phones),
+    Upsert(String, phone::Phones),
 }
 
-pub fn sound_trasformation(sound_system: &SoundSystem, words: Vec<String>) -> Transformation {
+pub fn sound_trasformation(sound_system: &mut SoundSystem, words: Vec<String>) -> Transformation {
     let mut history: Vec<History> = vec![];
-    let output = sound_system.rules.iter().fold(words, |words, rule| {
-        let mut output = vec![];
-        match rule {
-            Rule::SoundRule(SoundRule {
-                name,
-                regex,
-                replacement,
-            }) => {
-                for word in &words {
-                    output.push(apply_sound_rule(
-                        sound_system,
-                        Regex::new(&regex).unwrap(),
-                        replacement.as_ref(),
-                        word,
-                    ))
-                }
-                history.push(History {
-                    rule: name.to_string(),
-                    words: output.clone(),
-                    phonemes_changes: Diff::Skip,
-                });
+    let output = sound_system
+        .rules
+        .clone()
+        .iter()
+        .fold(words, |words, rule| {
+            let mut output = vec![];
+            match rule {
+                Rule::SoundRule(SoundRule {
+                    name,
+                    regex,
+                    replacement,
+                }) => {
+                    for word in &words {
+                        output.push(apply_sound_rule(
+                            sound_system,
+                            Regex::new(&regex).unwrap(),
+                            replacement.as_ref(),
+                            word,
+                        ))
+                    }
+                    history.push(History {
+                        rule: name.to_string(),
+                        words: output.clone(),
+                    });
 
-                output
+                    output
+                }
+                Rule::PhonemeRule(PhonemeRule {
+                    name,
+                    phoneme_differences,
+                }) => {
+                    sound_system.update_phoneme(phoneme_differences);
+                    history.push(History {
+                        rule: name.to_string(),
+                        words: words.clone(),
+                    });
+                    words
+                }
             }
-            Rule::PhonemeRule(PhonemeRule {
-                name,
-                phoneme,
-                phones,
-            }) => {
-                history.push(History {
-                    rule: name.to_string(),
-                    words: words.clone(),
-                    phonemes_changes: apply_phoneme_rule(sound_system, phoneme, phones),
-                });
-                words
-            }
-        }
-    });
+        });
     Transformation { output, history }
-}
-fn apply_phoneme_rule(
-    sound_system: &SoundSystem,
-    phoneme: &'_ str,
-    phones: &[phone::Phone],
-) -> Diff {
-    if phones.is_empty() {
-        Diff::Delete(phoneme.to_string())
-    } else {
-        match sound_system.phonemes.get(phoneme) {
-            None => Diff::Add(phoneme.to_string(), phones.to_vec()),
-            Some(current_phones) if current_phones.as_slice() != phones => {
-                Diff::Update(phoneme.to_string(), phones.to_vec())
-            }
-            _ => Diff::Skip,
-        }
-    }
 }
 
 fn apply_sound_rule(
@@ -178,7 +161,7 @@ mod tests {
     use crate::sound_system::{Rule, SoundSystem};
     #[test]
     fn test_expand() {
-        let sound_system = SoundSystem {
+        let mut sound_system = SoundSystem {
             classes: [
                 (
                     "S".to_string(),
@@ -202,7 +185,7 @@ mod tests {
             ..Default::default()
         };
         let words = vec!["apxal".to_string()];
-        let result = sound_trasformation(&sound_system, words);
+        let result = sound_trasformation(&mut sound_system, words);
         assert_eq!(
             result,
             Transformation {
@@ -210,14 +193,13 @@ mod tests {
                 history: vec![History {
                     rule: "V_*V: S -> Z".to_string(),
                     words: vec!["abxal".to_string()],
-                    phonemes_changes: Diff::Skip,
                 }]
             }
         )
     }
     #[test]
     fn test_replace_class_to_letter() {
-        let sound_system = SoundSystem {
+        let mut sound_system = SoundSystem {
             classes: [(
                 "S".to_string(),
                 vec!["p".to_string(), "t".to_string(), "c".to_string()],
@@ -235,7 +217,7 @@ mod tests {
             ..Default::default()
         };
         let words = vec!["apaepal".to_string()];
-        let result = sound_trasformation(&sound_system, words);
+        let result = sound_trasformation(&mut sound_system, words);
         assert_eq!(
             result,
             Transformation {
@@ -243,7 +225,6 @@ mod tests {
                 history: vec![History {
                     rule: "V_V: S -> x".to_string(),
                     words: vec!["axaexal".to_string()],
-                    phonemes_changes: Diff::Skip,
                 }]
             }
         )
@@ -251,7 +232,7 @@ mod tests {
 
     #[test]
     fn test_unknown_replacement_class() {
-        let sound_system = SoundSystem {
+        let mut sound_system = SoundSystem {
             classes: [(
                 "S".to_string(),
                 vec!["p".to_string(), "t".to_string(), "c".to_string()],
@@ -269,7 +250,7 @@ mod tests {
             ..Default::default()
         };
         let words = vec!["apal".to_string()];
-        let result = sound_trasformation(&sound_system, words);
+        let result = sound_trasformation(&mut sound_system, words);
         assert_eq!(
             result,
             Transformation {
@@ -277,7 +258,6 @@ mod tests {
                 history: vec![History {
                     rule: "V_V: S -> Z".to_string(),
                     words: vec!["apal".to_string()],
-                    phonemes_changes: Diff::Skip,
                 }]
             }
         )
@@ -285,7 +265,7 @@ mod tests {
 
     #[test]
     fn test_sound_transformation() {
-        let sound_system = SoundSystem {
+        let mut sound_system = SoundSystem {
             classes: [("S".to_string(), vec!["p".to_string(),"t".to_string(),"c".to_string()]),("Z".to_string(),vec!["b".to_string(),"d".to_string(),"g".to_string()])].iter().cloned().collect(),
             rules: vec![
             Rule::SoundRule(SoundRule {
@@ -307,7 +287,7 @@ mod tests {
             ..Default::default()};
 
         let words = vec!["la".to_string(), "apaacal".to_string()];
-        let result = sound_trasformation(&sound_system, words);
+        let result = sound_trasformation(&mut sound_system, words);
         assert_eq!(
             result,
             Transformation {
@@ -316,17 +296,14 @@ mod tests {
                     History {
                         rule: "#_: l -> ".to_string(),
                         words: vec!["a".to_string(), "apaacal".to_string()],
-                        phonemes_changes: Diff::Skip,
                     },
                     History {
                         rule: "_#: l -> ".to_string(),
                         words: vec!["a".to_string(), "apaaca".to_string()],
-                        phonemes_changes: Diff::Skip,
                     },
                     History {
                         rule: "V_V: S -> Z".to_string(),
                         words: vec!["a".to_string(), "abaaga".to_string()],
-                        phonemes_changes: Diff::Skip,
                     }
                 ]
             }

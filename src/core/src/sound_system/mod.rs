@@ -1,8 +1,7 @@
-#[cfg(feature = "wasm")]
-use wasm_bindgen::prelude::*;
-
 use crate::wgl;
 use pest::error::Error;
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
 
 use rand::prelude::*;
 use std::collections::HashMap;
@@ -48,23 +47,29 @@ pub enum MonoSyllableRepartition {
     Rare,
     Never,
 }
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub enum Rule {
     SoundRule(SoundRule),
     PhonemeRule(PhonemeRule),
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct SoundRule {
     name: String,
     regex: String,
     replacement: Option<String>,
 }
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default, Clone)]
 pub struct PhonemeRule {
     name: String,
-    phoneme: String,
-    phones: phone::Phones,
+    phoneme_differences: Vec<PhonemeDifference>,
+}
+
+#[derive(Debug, Serialize, Eq, PartialEq, Clone)]
+pub enum PhonemeDifference {
+    Skip,
+    Delete(String),
+    Upsert(String, phone::Phones),
 }
 
 impl MonoSyllableRepartition {
@@ -108,15 +113,14 @@ impl SoundSystem {
     fn add_phonemes(&mut self, repr: &'_ str, phones: phone::Phones) {
         self.phonemes.insert(repr.to_string(), phones);
     }
-    pub fn update_phoneme(&mut self, diff: &rules::Diff) {
-        match diff {
-            rules::Diff::Skip => (),
-            rules::Diff::Delete(repr) => {
+    pub fn update_phoneme(&mut self, diffs: &[PhonemeDifference]) {
+        diffs.iter().for_each(|diff| match diff {
+            PhonemeDifference::Skip => (),
+            PhonemeDifference::Delete(repr) => {
                 self.phonemes.remove(repr);
             }
-            rules::Diff::Add(repr, phones) => self.add_phonemes(repr, phones.clone()),
-            rules::Diff::Update(repr, phones) => self.add_phonemes(repr, phones.clone()),
-        }
+            PhonemeDifference::Upsert(repr, phones) => self.add_phonemes(repr, phones.clone()),
+        })
     }
 
     pub fn generate_words(

@@ -61,9 +61,9 @@ impl JSSoundSystem {
             .collect()
     }
 
-    pub fn sound_trasformation(&self, js_words: Vec<JsValue>) -> JSTransformation {
+    pub fn sound_trasformation(&mut self, js_words: Vec<JsValue>) -> JSTransformation {
         let words = js_words.into_iter().filter_map(|v| v.as_string()).collect();
-        let result = rules::sound_trasformation(&self.sound_system, words);
+        let result = rules::sound_trasformation(&mut self.sound_system, words);
         JSTransformation { result }
     }
     pub fn get_ipa(&self, word: String) -> String {

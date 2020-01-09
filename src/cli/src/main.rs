@@ -43,7 +43,7 @@ pub fn main() {
             let transformations = if skip_transformation {
                 Default::default()
             } else {
-                rules::sound_trasformation(&sound_system, words.clone())
+                rules::sound_trasformation(&mut sound_system, words.clone())
             };
             debug!("transformation rules {:#?}", transformations);
             match maybe_output {
@@ -52,7 +52,6 @@ pub fn main() {
                     let mut header = vec![Cell::new("Generated Word")
                         .with_style(Attr::Bold)
                         .with_style(Attr::ForegroundColor(color::CYAN))];
-
                     let rules = transformations
                         .history
                         .iter()
@@ -81,13 +80,9 @@ pub fn main() {
                     words.iter().enumerate().for_each(|(i, word)| {
                         let mut row = vec![Cell::new(word)];
                         rules.iter().enumerate().for_each(|(rule, _)| {
-                            if let Some(rules::History {
-                                words: history,
-                                phonemes_changes: diff,
-                                ..
-                            }) = transformations.history.get(rule)
+                            if let Some(rules::History { words: history, .. }) =
+                                transformations.history.get(rule)
                             {
-                                sound_system.update_phoneme(diff);
                                 let previous = if rule == 0 {
                                     word
                                 } else {
