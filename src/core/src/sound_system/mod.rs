@@ -1,76 +1,17 @@
 use crate::wgl;
 use pest::error::Error;
-#[cfg(feature = "wasm")]
-use wasm_bindgen::prelude::*;
 
 use rand::prelude::*;
-use std::collections::HashMap;
 use std::str::FromStr;
 
 mod compiler;
 mod distribution;
+mod types;
+
 pub mod phone;
 pub mod rules;
 pub use compiler::*;
-use std::convert::Into;
-
-#[derive(Default, Debug, Serialize)]
-pub struct SoundSystem {
-    classes: HashMap<String, Vec<String>>,
-    phonemes: HashMap<String, phone::Phones>,
-    syllables: Vec<Vec<String>>,
-    distribution: Vec<(String, f64)>,
-    rules: Vec<Rule>,
-}
-
-#[cfg(feature = "wasm")]
-#[wasm_bindgen]
-#[repr(u8)]
-#[derive(Debug)]
-pub enum MonoSyllableRepartition {
-    Always,
-    Mostly,
-    Frequent,
-    LessFrequent,
-    Rare,
-    Never,
-}
-
-#[cfg(not(feature = "wasm"))]
-#[repr(u8)]
-#[derive(Debug)]
-pub enum MonoSyllableRepartition {
-    Always,
-    Mostly,
-    Frequent,
-    LessFrequent,
-    Rare,
-    Never,
-}
-#[derive(Debug, Serialize, Clone)]
-pub enum Rule {
-    SoundRule(SoundRule),
-    PhonemeRule(PhonemeRule),
-}
-
-#[derive(Debug, Serialize, Clone)]
-pub struct SoundRule {
-    name: String,
-    regex: String,
-    replacement: Option<String>,
-}
-#[derive(Debug, Serialize, Default, Clone)]
-pub struct PhonemeRule {
-    name: String,
-    phoneme_differences: Vec<PhonemeDifference>,
-}
-
-#[derive(Debug, Serialize, Eq, PartialEq, Clone)]
-pub enum PhonemeDifference {
-    Skip,
-    Delete(String),
-    Upsert(String, phone::Phones),
-}
+pub use types::*;
 
 impl MonoSyllableRepartition {
     pub fn into_percentage(self) -> f32 {
@@ -106,21 +47,20 @@ pub fn from_string(input: &'_ str) -> Result<SoundSystem, Error<wgl::Rule>> {
 }
 
 impl SoundSystem {
-    fn new() -> Self {
-        Default::default()
+    fn add_phonemes(&mut self, repr: &'_ str, phones: phone::Phones) {
+        self.phonemes()
+            .insert(repr.to_string(), (phones, Condition::Always));
     }
 
-    fn add_phonemes(&mut self, repr: &'_ str, phones: phone::Phones) {
-        self.phonemes.insert(repr.to_string(), phones);
-    }
     pub fn update_phoneme(&mut self, diffs: &[PhonemeDifference]) {
         diffs.iter().for_each(|diff| match diff {
             PhonemeDifference::Skip => (),
             PhonemeDifference::Delete(repr) => {
-                self.phonemes.remove(repr);
+                self.phonemes().remove(repr);
             }
             PhonemeDifference::Upsert(repr, phones) => self.add_phonemes(repr, phones.clone()),
-        })
+        });
+        self.sort_phonemes()
     }
 
     pub fn generate_words(
@@ -147,16 +87,16 @@ impl SoundSystem {
     }
 
     fn syllable(&self) -> String {
-        let syllables_size = self.syllables.len();
+        let syllables_size = self.syllables().len();
         let syllable_drop = syllable_drop(syllables_size);
         let mut syllable = String::new();
         let index = distribution::power_law(syllables_size, syllable_drop);
-        let pattern = &self.syllables[index];
+        let pattern = &self.syllables()[index];
 
         for class_name in pattern {
-            if let Some(letters) = self.classes.get(class_name) {
+            if let Some(letters) = self.classes().get(class_name) {
                 let distribution = self
-                    .distribution
+                    .distribution()
                     .iter()
                     .filter(|t| letters.contains(&t.0))
                     .collect::<Vec<_>>();
@@ -169,27 +109,114 @@ impl SoundSystem {
 
     pub fn ipa_representation(&self, word: &'_ str) -> String {
         let mut result = String::new();
-        let mut phonemes = self.phonemes.iter().collect::<Vec<_>>();
-        phonemes.sort_by(|(a, _), (b, _)| b.len().cmp(&a.len()));
+        let phonemes = self.phonemes_sorted();
         let mut input = word.to_string();
+        let mut position: usize = 0;
+        let length = word.len();
         while !input.is_empty() {
-            match phonemes
+            let skip = match phonemes
                 .iter()
-                .find(|(letter, _)| input.starts_with(*letter))
+                .find_map(|tuple| self.find_phoneme(&input, tuple, position, length))
             {
                 Some((letter, phones)) => {
                     phones
                         .iter()
                         .map(|p| p.clone().into())
                         .for_each(|c| result.push(c));
-                    input = input[letter.len()..].to_string();
+                    letter.chars().count()
                 }
-                None => {
-                    input = input[1..].to_string();
+                None => 1,
+            };
+            position += skip;
+            input = input.chars().skip(skip).collect::<String>();
+        }
+        result
+    }
+
+    fn find_phoneme<'a, 'b>(
+        &self,
+        input: &'b str,
+        letters_condition: &'a (String, PhonemeCondition),
+        position: usize,
+        length: usize,
+    ) -> Option<(&'a String, &'a phone::Phones)> {
+        let (letter, (phones, condition)) = letters_condition;
+        let result = (letter, phones);
+        if input.starts_with(letter)
+            && self.resolve_condition(input, letter, position, length, condition)
+        {
+            Some(result)
+        } else {
+            None
+        }
+    }
+
+    fn resolve_condition(
+        &self,
+        input: &str,
+        letter: &str,
+        position: usize,
+        length: usize,
+        condition: &Condition,
+    ) -> bool {
+        match condition {
+            Condition::Single(cond_type) => {
+                self.resolve_condition_type(input, letter, position, length, cond_type)
+            }
+            Condition::Always => true,
+            Condition::Not(cond_type) => {
+                !self.resolve_condition_type(input, letter, position, length, cond_type)
+            }
+            Condition::Binary(op, left, right) => {
+                let left_bool = self.resolve_condition(input, letter, position, length, left);
+                let right_bool = self.resolve_condition(input, letter, position, length, right);
+                match op {
+                    ConditionOperand::And => left_bool && right_bool,
+                    ConditionOperand::Or => left_bool || right_bool,
                 }
             }
         }
-        result
+    }
+    fn resolve_condition_type(
+        &self,
+        input: &str,
+        letter: &str,
+        position: usize,
+        length: usize,
+        condition: &ConditionType,
+    ) -> bool {
+        match condition {
+            ConditionType::BeginningWord if position == 0 => true,
+            ConditionType::EndWord if position + letter.len() == length => true,
+            ConditionType::FollowedBy(value) => {
+                value.chars().enumerate().fold(true, |is_valid, (i, c)| {
+                    let value = c.to_string();
+                    let next = if c.is_uppercase() {
+                        self.classes()
+                            .get(&value)
+                            .map(|v| {
+                                v.iter()
+                                    .find_map(|s| {
+                                        input
+                                            .chars()
+                                            .nth(position + i + 1)
+                                            .map(|p| p.to_string().eq(s))
+                                    })
+                                    .unwrap_or(false)
+                            })
+                            .unwrap_or(false)
+                    } else {
+                        input
+                            .chars()
+                            .nth(position + i + 1)
+                            .map(|p| p == c)
+                            .unwrap_or(false)
+                    };
+                    is_valid && next
+                })
+            }
+            _ => false,
+        }
     }
 }
 

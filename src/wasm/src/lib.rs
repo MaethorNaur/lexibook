@@ -3,6 +3,7 @@
 extern crate console_error_panic_hook;
 
 extern crate wasm_bindgen;
+extern crate wasm_bindgen_futures;
 extern crate wee_alloc;
 
 use wasm_bindgen::prelude::*;
@@ -43,12 +44,13 @@ impl JSTransformation {
 
 #[wasm_bindgen(js_class = SoundSystem)]
 impl JSSoundSystem {
-    pub fn parse(js_input: String) -> Result<JSSoundSystem, JsValue> {
+    pub async fn parse(js_input: String) -> Result<JSSoundSystem, JsValue> {
         let input = Box::leak(js_input.into_boxed_str());
         sound_system::from_string(input)
             .map(|sound_system| JSSoundSystem { sound_system })
             .map_err(|error| JsValue::from(error.to_string()))
     }
+
     pub fn generate_words(
         &self,
         number_of_words: u32,
@@ -63,7 +65,7 @@ impl JSSoundSystem {
 
     pub fn sound_trasformation(&mut self, js_words: Vec<JsValue>) -> JSTransformation {
         let words = js_words.into_iter().filter_map(|v| v.as_string()).collect();
-        let result = rules::sound_trasformation(&mut self.sound_system, words);
+        let result = self.sound_system.sound_trasformation(words);
         JSTransformation { result }
     }
     pub fn get_ipa(&self, word: String) -> String {

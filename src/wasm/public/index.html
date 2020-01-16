@@ -10,17 +10,24 @@
       <fieldset>
         <textarea id="input" rows="10" cols="100">
 import:  std-assimilations ./src/test
-letters: l, a, b, d, th:θ, e, o, y, ä:ja, wa:wa, ë:je, we:we, ö:jo, wo:wo, m, n, p, t, c:k, g, x
+letters: l, h, t, a, b, d, e, o, y, w, ä, ë, ö, m, n, p, t, c, g, x
 
-C = l th m n p t b d c g x
-V = a e o y ja wa je we jo wo 
-R = l
-S = p t g
-Z = b d g
+phonemes:
+  th /θ/ 
+  ä /ja/ 
+  ë /je/
+  ö /jo/
+  c /k/
+  h /h/ at the beginning of word 
+
 syllables: CV V RV
 
 rules:
-an ~> ɑ̃
+_C: w ->
+C_#: w ->
+Vn ~> Ṽ
+aa ~> aː
+ee ~> eː
 V_V: S -> Z
 </textarea>
       </fieldset>

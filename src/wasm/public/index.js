@@ -1,3 +1,4 @@
+import * as lexibook from './lexibook';
 import * as wasm from "lexibook-wasm";
 import * as datatable from "vanilla-datatables";
 import css from "vanilla-datatables/src/vanilla-dataTables.css";
@@ -26,16 +27,19 @@ function toRepartition() {
     }
   }
 }
-document.getElementById("gen").addEventListener("click", _ev => {
+
+
+
+document.getElementById("gen").addEventListener("click", async _ev => {
   let result = document.createElement("table");
   document.querySelectorAll(".dataTable-wrapper").forEach(e => e.remove());
   error.innerHTML = "";
   let number_of_words = parseInt(words.value, 10);
   let repartition = toRepartition();
   try {
-    let ss = wasm.SoundSystem.parse(input.value);
-    let words = ss.generate_words(number_of_words, repartition);
-    let trans = ss.sound_trasformation(words);
+    let ss = await lexibook.parse(input.value);
+    let words = await lexibook.generate_words(ss, number_of_words, repartition);
+    let trans = await lexibook.sound_trasformation(ss, words);
     let data = { headings: ["Words"], data: [] };
     trans.history().forEach(t => data.headings.push(t.rule));
     data.headings.push("Final");

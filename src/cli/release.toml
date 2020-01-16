@@ -1,0 +1,6 @@
+consolidate-commits = true
+disable-publish = true
+disable-tag = true
+pre-release-replacements = [
+  {file="src/cli.yml", search="version: \"[a-z0-9\\.-]+\"", replace="version: \"{{version}}\""},
+]

@@ -1,9 +1,13 @@
 wgl = _{ SOI ~ NEWLINE* ~ 
   (import ~ NEWLINE+)? ~ 
-  (letters ~ NEWLINE+)? ~ 
-  (class ~ NEWLINE+)* ~ 
-  (syllables ~ NEWLINE+)? ~ 
-  (rules ~ NEWLINE*)? ~ 
+  (
+   (letters |
+    phonemes |
+    class |
+    syllables |
+    rules
+   )
+    ~ NEWLINE+)* ~ 
   EOI
 }
 
@@ -15,9 +19,15 @@ separator_file = _{"\\" | "/"}
 
 filename = @{ ASCII_ALPHANUMERIC ~ (ASCII_ALPHANUMERIC | "_" | "-" | ".")* }
 
-letters = { ^"letters" ~ ":" ~ letter_sound ~ ("," ~ NEWLINE* ~ letter_sound)* }
-letter_sound = { letter ~ (":" ~ phonetic_notation+)? }
-letter = @{ (!(NEWLINE | WHITESPACE | ":" | ",") ~ ANY)+ }
+letters = { ^"letters" ~ ":" ~ letter_distribution ~ ("," ~ NEWLINE* ~ letter_distribution)* }
+letter_distribution = { letter ~ (":" ~ number)? }
+number = @{
+    "-"?
+    ~ ("0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*)
+    ~ ("." ~ ASCII_DIGIT*)?
+}
+
+letter = @{ (!(NEWLINE | WHITESPACE | ":" | "," | "\"") ~ ANY)+ }
 
 syllables = { ^"syllables" ~ ":"  ~ words  ~ words* }
 words = ${ word  ~ word* }
@@ -25,6 +35,7 @@ word = ${ UPPERCASE_LETTER ~ "?"? }
 
 class = { class_name ~ "=" ~ letter+}
 class_name = {UPPERCASE_LETTER}
+
 phonetic_notation = {  
  ASCII_ALPHA_LOWER | 
   "ˈ" | "ˌ" | "ː" |"ˑ"| "\u{306}" |
@@ -39,11 +50,24 @@ phonetic_notation = {
   "\u{31E}" | "\u{2D5}" | "\u{329}" | "\u{339}" | "\u{31C}" | "\u{334}" | "\u{318}" | "\u{318}" | "\u{319}" | "\u{303}" | "\u{2DE}" | "\u{30A}" |  "\u{325}"
 }
 
+phonemes = { ^"phonemes" ~ ":" ~ NEWLINE* ~ phoneme ~ ( NEWLINE+ ~ phoneme)*}
+phoneme = ${WHITESPACE* ~ letter+ ~  WHITESPACE+ ~ "/" ~ phonetic_notations ~ "/" ~ (WHITESPACE+ ~ phoneme_conditions ~ WHITESPACE*)?}
+phoneme_conditions = { (NOT ~ WHITESPACE+)? ~ phoneme_condition ~ ( WHITESPACE+ ~ (AND | OR) ~ (WHITESPACE+ | WHITESPACE* ~ NEWLINE+) ~ phoneme_conditions)*}
+phonetic_notations = @{phonetic_notation+}
+phoneme_condition = { beginning_word | end_word | followed_by | between }
+
+beginning_word = {^"at" ~ WHITESPACE+ ~ ^"the" ~ WHITESPACE+ ~ ^"beginning" ~ WHITESPACE+ ~ ^"of" ~ WHITESPACE+ ~ ^"word"}
+end_word = {^"at" ~ WHITESPACE+ ~ ^"the" ~ WHITESPACE+ ~ ^"end" ~ WHITESPACE+ ~ ^"of" ~ WHITESPACE+ ~ ^"word"}
+
+followed_by =  {^"followed" ~ WHITESPACE+ ~ ^"by" ~ WHITESPACE+ ~ "\"" ~ (class_name | letter+) ~ "\""}
+between =  {^"between" ~ WHITESPACE+ ~ "\"" ~ (class_name | letter+) ~ "\"" ~ ^"and" ~ WHITESPACE+ ~ "\"" ~ (class_name | letter+) ~ "\""}
+
 rules = { ^"rules" ~ ":" ~ NEWLINE* ~ rule ~ (NEWLINE+ ~ rule)* }
 
 rule = { sound_rule | phoneme_rule }
 sound_rule = { environment ~ ":" ~ input ~ "->" ~ output?  }
 phoneme_rule = { input ~ "~>" ~ ((class_name | phonetic_notation)+)?  }
+
 environment = ${ word_separator? ~ class_or_letter* ~ "_" ~ expand? ~ class_or_letter*  ~ word_separator? }
 expand = { "*" }
 word_separator = { "#" }
@@ -51,6 +75,10 @@ class_or_letter = _{ class_name | phonetic_notation }
 
 input= @{ (!(NEWLINE | WHITESPACE | "->" | "#") ~ ANY)+ } 
 output = @{ (!(NEWLINE | WHITESPACE)  ~ ANY)+ } 
+
+NOT = { ^"not"}
+AND = { ^"and" }
+OR = { ^"or"}
 
 WHITESPACE =  _{ " " | "\t" } 
 COMMENT = _{ "%" ~ (!NEWLINE ~ ANY)* } 

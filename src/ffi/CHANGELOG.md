@@ -2,6 +2,13 @@
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+
+### Changed
+
+- Update core to Unreleased
+- Create a genering type for String list
+- Update FFI interface to only return the pointer of `SoundSystem`
+
 ## [0.2.6] - 2020-01-09
 
 ### Changed

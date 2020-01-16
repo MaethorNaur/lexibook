@@ -8,19 +8,34 @@ use pest::Parser;
 #[grammar = "wgl.pest"]
 struct WGLParser;
 
-#[derive(Debug)]
+pub type Letter<'a> = (&'a str, f64);
+
+#[derive(Debug, Default)]
 pub struct AST<'a> {
     pub imports: Vec<&'a str>,
     pub letters: Vec<Letter<'a>>,
     pub classes: HashMap<&'a str, Vec<&'a str>>,
     pub syllables: Vec<Vec<&'a str>>,
     pub rules: Vec<TransformationRule<'a>>,
+    pub phonemes: HashMap<&'a str, (&'a str, Condition<'a>)>,
 }
 
-#[derive(Debug)]
-pub enum Letter<'a> {
-    WithPhoneticNotation(&'a str, Vec<&'a str>),
-    OnlyRepresensation(&'a str),
+#[derive(Debug, Clone)]
+pub enum Condition<'a> {
+    Always,
+    Not(ConditionType<'a>),
+    And(Box<Condition<'a>>, Box<Condition<'a>>),
+    Or(Box<Condition<'a>>, Box<Condition<'a>>),
+    Single(ConditionType<'a>),
+}
+
+#[derive(Debug, Clone)]
+pub enum ConditionType<'a> {
+    None,
+    BeginningWord,
+    EndWord,
+    FollowedBy(&'a str),
+    Between(&'a str, &'a str),
 }
 
 #[derive(Debug)]
@@ -97,25 +112,10 @@ impl<'a> Environment<'a> {
     }
 }
 
-impl<'a> Letter<'a> {
-    pub fn to_string(&self) -> &'a str {
-        match self {
-            Letter::OnlyRepresensation(s) => s,
-            Letter::WithPhoneticNotation(s, _) => s,
-        }
-    }
-}
-
 pub fn from_string(input: &'_ str) -> Result<AST, Error<Rule>> {
     let pairs = WGLParser::parse(Rule::wgl, &input)?;
     trace!("WGL parsed AST: {:#?}", pairs);
-    let mut ast = AST {
-        imports: vec![],
-        letters: vec![],
-        classes: HashMap::new(),
-        syllables: vec![],
-        rules: vec![],
-    };
+    let mut ast: AST = Default::default();
     for pair in pairs {
         let rule = pair.as_rule();
         match rule {
@@ -127,6 +127,7 @@ pub fn from_string(input: &'_ str) -> Result<AST, Error<Rule>> {
             }
             Rule::syllables => ast.syllables = build_syllables(pair),
             Rule::rules => ast.rules = build_rules(pair),
+            Rule::phonemes => ast.phonemes = build_phonemes(pair),
             _ => {}
         }
     }
@@ -136,28 +137,85 @@ pub fn from_string(input: &'_ str) -> Result<AST, Error<Rule>> {
     Ok(ast)
 }
 
+fn build_phonemes(
+    pair: pest::iterators::Pair<'_, Rule>,
+) -> HashMap<&'_ str, (&'_ str, Condition<'_>)> {
+    pair.into_inner()
+        .map(|phoneme_pair| {
+            let mut pair = phoneme_pair.into_inner();
+            let letter = pair.next().unwrap().as_str();
+            let notation = pair.next().unwrap().as_str();
+            let condition = pair
+                .next()
+                .map(build_condition)
+                .unwrap_or(Condition::Always);
+            (letter, (notation, condition))
+        })
+        .collect()
+}
+
+fn build_condition_type(pair: pest::iterators::Pair<'_, Rule>) -> ConditionType<'_> {
+    let inner = pair.into_inner().next().unwrap();
+    match inner.as_rule() {
+        Rule::beginning_word => ConditionType::BeginningWord,
+        Rule::end_word => ConditionType::EndWord,
+        Rule::between => {
+            let mut rule = inner.into_inner();
+            ConditionType::Between(rule.next().unwrap().as_str(), rule.next().unwrap().as_str())
+        }
+        _ => {
+            let rule = inner.into_inner().next().unwrap();
+            ConditionType::FollowedBy(rule.as_str())
+        }
+    }
+}
+
+fn build_condition(pair: pest::iterators::Pair<'_, Rule>) -> Condition<'_> {
+    pair.into_inner()
+        .fold(Condition::Always, |condition, inner| {
+            let rule = inner.as_rule();
+            match rule {
+                Rule::NOT => Condition::Not(ConditionType::None),
+                Rule::phoneme_condition => {
+                    let condition_type = build_condition_type(inner);
+                    match condition {
+                        Condition::Not(_) => Condition::Not(condition_type),
+                        _ => Condition::Single(condition_type),
+                    }
+                }
+                Rule::AND => Condition::And(Box::new(condition), Box::new(Condition::Always)),
+                Rule::OR => Condition::Or(Box::new(condition), Box::new(Condition::Always)),
+                Rule::phoneme_conditions => {
+                    let right = Box::from(build_condition(inner));
+                    match condition {
+                        Condition::And(left, _) => Condition::And(left, right),
+                        Condition::Or(left, _) => Condition::Or(left, right),
+                        _ => condition,
+                    }
+                }
+                _ => condition,
+            }
+        })
+}
+
 fn build_imports(pair: pest::iterators::Pair<'_, Rule>) -> Vec<&'_ str> {
     pair.into_inner().map(|r| r.as_str()).collect()
 }
 
 #[allow(irrefutable_let_patterns)]
 fn build_letters(pair: pest::iterators::Pair<'_, Rule>) -> Vec<Letter<'_>> {
-    let pairs = pair.into_inner();
-    let mut letters = vec![];
-    for pair in pairs {
-        if let _ = Rule::letter_sound {
-            let mut letter_sound = pair.into_inner();
-            let represensation = letter_sound.next().unwrap().as_str();
-            let sounds: Vec<_> = letter_sound.map(build_sound).collect();
-            let letter = if sounds.is_empty() {
-                Letter::OnlyRepresensation(represensation)
-            } else {
-                Letter::WithPhoneticNotation(represensation, sounds)
-            };
-            letters.push(letter)
-        }
-    }
-    letters
+    pair.into_inner()
+        .map(|pair| {
+            let mut inner = pair.into_inner();
+            (
+                inner.next().unwrap().as_str(),
+                inner
+                    .next()
+                    .and_then(|p| p.as_str().parse::<f64>().ok())
+                    .unwrap_or(0.0),
+            )
+        })
+        .collect()
 }
 
 fn build_rules(pair: pest::iterators::Pair<'_, Rule>) -> Vec<TransformationRule<'_>> {
@@ -210,10 +268,6 @@ fn build_environment(pair: pest::iterators::Pair<'_, Rule>) -> Environment<'_> {
 }
 
 fn build_input_output(pair: pest::iterators::Pair<'_, Rule>) -> &'_ str {
-    pair.as_str()
-}
-
-fn build_sound(pair: pest::iterators::Pair<'_, Rule>) -> &'_ str {
     pair.as_str()
 }
 

@@ -1,5 +1,5 @@
 name: lexibook
-version: "1.0"
+version: "0.2.6"
 author: Pedro Mangabeira <pedro@2aworld.tech>
 about: Generate words and apply sounds transformations
 args:
@@ -10,8 +10,8 @@ args:
       help: numbers of words to generate
       takes_value: true
   - syllable:
-      short: s
-      long: syllable
+      short: r
+      long: repartition
       value_name: REPARTITION
       help: Repartition of mono syllable words. Default to "less_frequent"
       takes_value: true
@@ -22,12 +22,16 @@ args:
         - less_frequent
         - rare
         - never
+  - silent:
+      short: s
+      long: silent
+      help: Disable outputing logs. 
+            This flag take over verbose flag.
   - verbose:
       short: v
       long: verbose
       help: Pass many times for more log output
-            By default, logging is off. Passing `-v` one time also prints warnings, `-vv` enables info logging,
-            `-vvv` debug, and `-vvvv` trace.
+            By default, logging is set to info. Passing `-v` one time also prints debug, `-vv` enables trace logging.
       multiple: true
   - skip_transformation:
       short: t

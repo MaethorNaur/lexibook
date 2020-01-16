@@ -1,67 +1,84 @@
 use super::distribution::frequency;
 use super::phone::*;
-use super::{PhonemeDifference, PhonemeRule, Rule, SoundRule, SoundSystem};
-use crate::wgl::{Environment, Letter, TransformationRule, AST};
+use super::{
+    Condition, PhonemeCondition, PhonemeDifference, PhonemeRule, Rule, SoundRule, SoundSystem,
+};
+use crate::wgl::{Environment, TransformationRule, AST};
 use std::collections::HashMap;
-use std::convert::TryFrom;
+use std::convert::{Into, TryFrom};
 
 impl SoundSystem {
     pub fn compile(ast: AST<'_>) -> Self {
-        let mut sound_system = SoundSystem::new();
-        let letters: Vec<_> = ast.letters.iter().map(|s| s.to_string()).collect();
-        sound_system.distribution = frequency(letters);
-        ast.letters.iter().for_each(|letter| {
-            let notation = convert_ipa_letters_to_sounds(letter);
-            sound_system.add_phonemes(letter.to_string(), notation)
+        let distribution = frequency(&ast.letters);
+        let mut phonemes: HashMap<String, PhonemeCondition> = ast
+            .letters
+            .iter()
+            .map(|(letters, _)| {
+                (
+                    (*letters).to_string(),
+                    (convert_ipa_letters_to_sounds(letters), Condition::Always),
+                )
+            })
+            .collect();
+        ast.phonemes
+            .iter()
+            .for_each(|(letter, (phones, condition))| {
+                let phones = phones
+                    .chars()
+                    .filter_map(|c| Phone::try_from(c).ok())
+                    .collect::<Vec<_>>();
+                phonemes.insert((*letter).to_string(), (phones, condition.clone().into()));
+            });
+        let mut classes: HashMap<String, Vec<String>> = HashMap::new();
+        let mut sorted_phonemes: Vec<_> = phonemes
+            .iter()
+            .filter(|(repr, _)| ast.letters.iter().any(|(letter, _)| letter == repr))
+            .collect::<Vec<_>>();
+        sorted_phonemes.sort_unstable_by(|(_, (left_phones, _)), (_, (right_phones, _))| {
+            Ord::cmp(&right_phones[0], &left_phones[0])
         });
-
-        let classes = &mut sound_system.classes;
-        for (repr, phones) in &sound_system.phonemes {
-            match phones.iter().find(|phone| match phone {
-                Phone::Vowel(_) | Phone::Consonant(_) => true,
-                _ => false,
-            }) {
-                Some(Phone::Vowel(_)) => {
-                    let vec = classes.entry("V".to_string()).or_insert_with(|| vec![]);
-                    vec.push(repr.to_string());
+        trace!("Sorted: {:#?}", sorted_phonemes);
+        for (repr, (phones, _)) in &sorted_phonemes {
+            if let Some(phone_classes) = phones.get(0).unwrap().classes() {
+                for classe in phone_classes {
+                    let vec = classes.entry(classe.to_string()).or_insert_with(|| vec![]);
+                    vec.push((*repr).to_string());
                 }
-                Some(Phone::Consonant(_)) => {
-                    let vec = classes.entry("C".to_string()).or_insert_with(|| vec![]);
-                    vec.push(repr.to_string());
-                }
-                _ => {}
             }
         }
+
         for (class_name, letters) in ast.classes {
             classes.insert(
                 class_name.to_string(),
                 letters.iter().map(|s| (*s).to_string()).collect::<Vec<_>>(),
             );
         }
-        sound_system.rules = ast
+
+        let rules = ast
             .rules
             .iter()
             .map(|rule| match rule {
                 TransformationRule::SoundRule(_) => Rule::SoundRule(SoundRule {
                     name: rule.to_string(),
-                    regex: rule_to_regex(classes, rule),
+                    regex: rule_to_regex(&classes, rule),
                     replacement: rule.output().map(|s| s.to_string()),
                 }),
                 TransformationRule::PhonemeRule(_) => Rule::PhonemeRule(PhonemeRule {
                     name: rule.to_string(),
                     phoneme_differences: rule_to_phoneme_differences(
-                        classes,
+                        &classes,
                         rule.input(),
                         rule.output(),
                     ),
                 }),
             })
             .collect::<Vec<_>>();
-        sound_system.syllables = ast
+        let syllables = ast
             .syllables
             .iter()
             .map(|l| l.iter().map(|s| (*s).to_string()).collect())
             .collect();
+        let sound_system = SoundSystem::new(classes, phonemes, syllables, distribution, rules);
         trace!("Sound system compiled: {:#?}", sound_system);
         sound_system
     }
@@ -81,7 +98,7 @@ fn rule_to_phoneme_differences(
             .collect(),
         Some(phones) => {
             let expanded_phones = expand(classes, &phones);
-            expanded_phones
+            expanded
                 .iter()
                 .enumerate()
                 .filter_map(|(idx, phoneme)| {
@@ -132,16 +149,11 @@ fn expand(classes: &HashMap<String, Vec<String>>, s: &'_ str) -> Vec<String> {
         })
 }
 
-fn convert_ipa_letters_to_sounds(letter: &Letter<'_>) -> Vec<Phone> {
-    let mut sounds = vec![];
-    match letter {
-        Letter::OnlyRepresensation(s) => sounds.push(Phone::try_from(*s).unwrap()),
-        Letter::WithPhoneticNotation(_, notations) => notations
-            .iter()
-            .filter_map(|s| Phone::try_from(*s).ok())
-            .for_each(|s| sounds.push(s)),
-    }
-    sounds
+fn convert_ipa_letters_to_sounds(letter: &str) -> Vec<Phone> {
+    letter
+        .chars()
+        .filter_map(|c| Phone::try_from(c).ok())
+        .collect()
 }
 
 fn rule_to_regex(classes: &HashMap<String, Vec<String>>, rule: &TransformationRule<'_>) -> String {
@@ -197,8 +209,8 @@ mod tests {
     use super::*;
     #[test]
     fn test_convert_ipa_letters_to_sounds() {
-        let letter = Letter::WithPhoneticNotation("a", vec!["a", "n"]);
-        let result = convert_ipa_letters_to_sounds(&letter);
+        let letters = "an";
+        let result = convert_ipa_letters_to_sounds(letters);
         assert_eq!(
             result,
             vec![
@@ -206,12 +218,11 @@ mod tests {
                     height: Height::Open,
                     backness: Backness::Front,
                     roundness: Roundness::UnRounded,
-                    properties: vec![]
                 }),
                 Phone::Consonant(Consonant {
                     place: ConsonantPlace::Alveolar,
                     manner: ConsonantManner::Nasal,
-                    properties: vec![PhoneProperty::Phonation(Phonation::Voiced)]
+                    phonation: Phonation::Voiced
                 })
             ]
         )
