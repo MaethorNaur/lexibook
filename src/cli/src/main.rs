@@ -5,7 +5,7 @@ extern crate simple_logger;
 #[macro_use]
 extern crate clap;
 
-use clap::App;
+use clap::{App, ArgMatches};
 use log::Level;
 use prettytable::{color, Attr, Cell, Row, Table};
 use std::fs;
@@ -16,20 +16,24 @@ use std::path::Path;
 use lexibook::sound_system::rules;
 use lexibook::sound_system::MonoSyllableRepartition;
 
+fn setup_log<'a>(matches: &ArgMatches<'a>) {
+    if !matches.is_present("silent") {
+        let level = match matches.occurrences_of("verbose") {
+            0 => Level::Info,
+            1 => Level::Debug,
+            _ => Level::Trace,
+        };
+
+        simple_logger::init_with_level(level).unwrap();
+    }
+}
+
 pub fn main() {
     let yaml = load_yaml!("cli.yml");
     let matches = App::from_yaml(yaml).get_matches();
     let filename = matches.value_of("FILE").unwrap();
-    if matches.is_present("verbose") {
-        let level = match matches.occurrences_of("verbose") {
-            1 => Level::Warn,
-            2 => Level::Info,
-            3 => Level::Debug,
-            _ => Level::Trace,
-        };
-        simple_logger::init_with_level(level).unwrap();
-    }
 
+    setup_log(&matches);
     let skip_transformation = matches.is_present("skip_transformation");
 
     let numbers = value_t!(matches, "numbers", usize).unwrap_or(10);
@@ -43,9 +47,8 @@ pub fn main() {
             let transformations = if skip_transformation {
                 Default::default()
             } else {
-                rules::sound_trasformation(&mut sound_system, words.clone())
+                sound_system.sound_trasformation(words.clone())
             };
-            debug!("transformation rules {:#?}", transformations);
             match maybe_output {
                 None => {
                     let mut table = Table::new();

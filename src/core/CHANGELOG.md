@@ -2,6 +2,11 @@
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+
+### Added
+
+- Phoneme def ([#7](https://gitlab.com/lexibook/lexibook/issues/7))
+
 ## [0.2.6] - 2020-01-09
 
 ### Changed

@@ -56,3 +56,5 @@ assets/js/scalajs-output*.js.map
 
 #/target
 #**/*.rs.bk
+test/*.o
+test/test

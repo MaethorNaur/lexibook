@@ -20,8 +20,6 @@ stages:
     CARGO_INCREMENTAL: "0"
     RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads"
   script:
-    - rm -rf target/
-    - echo ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
     - cargo build
     - cargo test 
     - |
@@ -33,7 +31,7 @@ lint:rustfmt:
   only:
     - merge_requests
   stage: test
-  image: "guangie88/rustfmt-clippy:stable"
+  image: "guangie88/rustfmt-clippy:nightly"
   script:
     - cargo fmt -- --check
 
