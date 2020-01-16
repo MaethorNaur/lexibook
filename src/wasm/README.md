@@ -1,6 +1,6 @@
 # Lexibook WASM
 
-Current release: 0.2.6
+Current release: 0.3.0
 
 ## Build
 

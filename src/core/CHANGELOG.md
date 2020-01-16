@@ -2,6 +2,7 @@
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.3.0] - 2020-01-16
 
 ### Added
 
@@ -17,5 +18,6 @@
 ## [0.2.5] - 2020-01-08
 
 <!-- next-url -->
-[Unreleased]: https://gitlab.com/lexibook/lexibook/compare/lexibook-v0.2.6...HEAD
+[Unreleased]: https://gitlab.com/lexibook/lexibook/compare/v0.3.0...HEAD
+[0.3.0]: https://gitlab.com/lexibook/lexibook/compare/lexibook-v0.2.6...v0.3.0
 [0.2.6]: https://gitlab.com/lexibook/lexibook/compare/lexibook-v0.2.5...lexibook-v0.2.6

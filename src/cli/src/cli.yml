@@ -1,5 +1,5 @@
 name: lexibook
-version: "0.2.6"
+version: "0.3.0"
 author: Pedro Mangabeira <pedro@2aworld.tech>
 about: Generate words and apply sounds transformations
 args:
