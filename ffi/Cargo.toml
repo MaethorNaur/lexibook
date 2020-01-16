@@ -1,15 +1,23 @@
 [package]
-name = "lexibook-cli"
-version = "0.3.0"
+name = "lexibook-ffi"
+version = "0.3.1-alpha.0"
 authors = ["Pedro Mangabeira <pedro@2aworld.tech>"]
 edition = "2018"
 publish = false
 license = "MIT"
 repository = "https://gitlab.com/lexibook/lexibook"
+build = "build.rs"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
 
 [dependencies]
 lexibook = {path="../core"}
 log = "0.4.8"
-prettytable-rs = "^0.8"
-clap = {version = "2.33", features = ["yaml"]}
+lazy_static = "1.4.0"
 simple_logger = "1.4.0"
+pest = "2.1.2"
+
+[build-dependencies]
+cbindgen = "0.12.0"

@@ -1,3 +1,4 @@
+use super::Distribution;
 use rand::prelude::*;
 pub fn power_law(max: usize, percentage: f32) -> usize {
     let mut result = 0;
@@ -44,11 +45,11 @@ pub fn frequency(letters: &[(&'_ str, f64)]) -> Vec<(String, f64)> {
     }
 }
 
-pub fn select(frequency: Vec<&(String, f64)>) -> &'_ str {
+pub fn select(frequency: &'_ [Distribution]) -> &'_ str {
     let sum = frequency.iter().map(|t| t.1).sum::<f64>();
     let mut tmp = 0.0;
     let picked = thread_rng().gen_range(0.0, sum);
-    for tuple in &frequency {
+    for tuple in frequency {
         let (letter, weight) = tuple;
         tmp += weight;
         if picked < tmp {

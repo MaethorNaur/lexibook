@@ -65,12 +65,12 @@ build:wasm:
     - rustup target add wasm32-unknown-unknown
     - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
   script:
-    - cd src/wasm
+    - cd wasm
     - wasm-pack build
   artifacts:
     expire_in: 1h
     paths:
-      - src/wasm/pkg/ 
+      - wasm/pkg/ 
 pages:
   only:
     - tags
@@ -79,12 +79,12 @@ pages:
   dependencies:
     - build:wasm
   script:
-    - cd src/wasm/public
+    - cd wasm/public
     - npm i
     - npm run build
-    - cd ../../../
+    - cd ../../
     - rm -rf public
-    - mv src/wasm/public/dist public/
+    - mv wasm/public/dist public/
   artifacts:
     paths:
       - public

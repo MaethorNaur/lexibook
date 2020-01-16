@@ -44,7 +44,7 @@ impl Phone {
                     ConsonantPlace::Palatal => result.push("J"),
                     ConsonantPlace::Velar => result.push("G"),
                     ConsonantPlace::Uvular => result.push("Q"),
-                    ConsonantPlace::Pharyngeal | ConsonantPlace::Glotal => result.push("T"),
+                    ConsonantPlace::Pharyngeal | ConsonantPlace::Glottal => result.push("T"),
                 }
                 match manner {
                     ConsonantManner::Stop => result.push("P"),

@@ -76,7 +76,7 @@ impl Consonant {
                 phonation: Phonation::Voiceless,
             }
             | Consonant {
-                place: ConsonantPlace::Glotal,
+                place: ConsonantPlace::Glottal,
                 manner: ConsonantManner::Stop,
                 phonation: Phonation::Voiceless,
             }
@@ -223,5 +223,16 @@ fn compare_consonant(left: Consonant, right: Consonant) -> Ordering {
 impl Ord for Phone {
     fn cmp(&self, other: &Self) -> Ordering {
         self.partial_cmp(other).unwrap_or(Ordering::Less)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::cmp::Ordering;
+    #[test]
+    fn test_manner_order() {
+        let result = ConsonantManner::Nasal.cmp(&ConsonantManner::Stop);
+        assert_eq!(result, Ordering::Less)
     }
 }

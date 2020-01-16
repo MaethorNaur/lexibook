@@ -8,7 +8,6 @@ pub type PhonemeCondition = (phone::Phones, Condition);
 pub type Phoneme = (String, PhonemeCondition);
 
 #[derive(Default, Debug, Serialize)]
-#[repr(C)]
 pub struct SoundSystem {
     classes: HashMap<String, Vec<String>>,
     phonemes: HashMap<String, PhonemeCondition>,
@@ -19,28 +18,19 @@ pub struct SoundSystem {
 }
 
 #[derive(Debug, Serialize, Clone)]
-#[repr(C)]
 pub enum Rule {
-    SoundRule(SoundRule),
-    PhonemeRule(PhonemeRule),
-}
-
-#[derive(Debug, Serialize, Clone)]
-#[repr(C)]
-pub struct SoundRule {
-    pub name: String,
-    pub regex: String,
-    pub replacement: Option<String>,
-}
-#[derive(Debug, Serialize, Default, Clone)]
-#[repr(C)]
-pub struct PhonemeRule {
-    pub name: String,
-    pub phoneme_differences: Vec<PhonemeDifference>,
+    SoundRule {
+        name: String,
+        regex: String,
+        replacement: Option<String>,
+    },
+    PhonemeRule {
+        name: String,
+        phoneme_differences: Vec<PhonemeDifference>,
+    },
 }
 
 #[derive(Debug, Serialize, Eq, PartialEq, Clone)]
-#[repr(C)]
 pub enum PhonemeDifference {
     Skip,
     Delete(String),
@@ -52,7 +42,11 @@ pub enum Condition {
     Always,
     Single(ConditionType),
     Not(ConditionType),
-    Binary(ConditionOperand, Box<Condition>, Box<Condition>),
+    Binary {
+        operand: ConditionOperand,
+        left: Box<Condition>,
+        right: Box<Condition>,
+    },
 }
 
 impl<'a> Into<Condition> for wgl::Condition<'a> {
@@ -61,16 +55,16 @@ impl<'a> Into<Condition> for wgl::Condition<'a> {
             wgl::Condition::Always => Condition::Always,
             wgl::Condition::Single(single) => Condition::Single(single.into()),
             wgl::Condition::Not(not) => Condition::Not(not.into()),
-            wgl::Condition::And(left, right) => Condition::Binary(
-                ConditionOperand::And,
-                Box::new((*left).into()),
-                Box::new((*right).into()),
-            ),
-            wgl::Condition::Or(left, right) => Condition::Binary(
-                ConditionOperand::Or,
-                Box::new((*left).into()),
-                Box::new((*right).into()),
-            ),
+            wgl::Condition::And(left, right) => Condition::Binary {
+                operand: ConditionOperand::And,
+                left: Box::new((*left).into()),
+                right: Box::new((*right).into()),
+            },
+            wgl::Condition::Or(left, right) => Condition::Binary {
+                operand: ConditionOperand::Or,
+                left: Box::new((*left).into()),
+                right: Box::new((*right).into()),
+            },
         }
     }
 }

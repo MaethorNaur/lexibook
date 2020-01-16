@@ -40,15 +40,15 @@ pub enum ConditionType<'a> {
 
 #[derive(Debug)]
 pub enum TransformationRule<'a> {
-    SoundRule(SoundRule<'a>),
-    PhonemeRule((&'a str, Option<&'a str>)),
-}
-
-#[derive(Debug)]
-pub struct SoundRule<'a> {
-    environment: Environment<'a>,
-    input: &'a str,
-    output: Option<&'a str>,
+    SoundRule {
+        environment: Environment<'a>,
+        input: &'a str,
+        output: Option<&'a str>,
+    },
+    PhonemeRule {
+        input: &'a str,
+        output: Option<&'a str>,
+    },
 }
 
 #[derive(Debug)]
@@ -60,22 +60,22 @@ pub enum Environment<'a> {
 impl<'a> TransformationRule<'a> {
     pub fn environment(&self) -> Option<&Environment<'a>> {
         match self {
-            TransformationRule::SoundRule(rule) => Some(&rule.environment),
-            TransformationRule::PhonemeRule(_rule) => None,
+            TransformationRule::SoundRule { environment, .. } => Some(&environment),
+            TransformationRule::PhonemeRule { .. } => None,
         }
     }
 
     pub fn input(&self) -> &'a str {
         match self {
-            TransformationRule::SoundRule(rule) => rule.input,
-            TransformationRule::PhonemeRule(rule) => rule.0,
+            TransformationRule::SoundRule { input, .. } => input,
+            TransformationRule::PhonemeRule { input, .. } => input,
         }
     }
 
     pub fn output(&self) -> Option<&'a str> {
         match self {
-            TransformationRule::SoundRule(rule) => rule.output,
-            TransformationRule::PhonemeRule(rule) => rule.1,
+            TransformationRule::SoundRule { output, .. } => *output,
+            TransformationRule::PhonemeRule { output, .. } => *output,
         }
     }
 }
@@ -83,8 +83,8 @@ impl<'a> TransformationRule<'a> {
 impl<'a> fmt::Display for TransformationRule<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mode = match self {
-            TransformationRule::SoundRule(_rule) => "->",
-            TransformationRule::PhonemeRule(_rule) => "~>",
+            TransformationRule::SoundRule { .. } => "->",
+            TransformationRule::PhonemeRule { .. } => "~>",
         };
 
         write!(
@@ -229,13 +229,13 @@ fn build_sound_or_phoneme_rule(
 ) -> Option<TransformationRule<'_>> {
     let rule = pair.into_inner().next().unwrap();
     match rule.as_rule() {
-        Rule::sound_rule => Some(TransformationRule::SoundRule(build_sound_rule(rule))),
-        Rule::phoneme_rule => Some(TransformationRule::PhonemeRule(build_phoneme_rule(rule))),
+        Rule::sound_rule => Some(build_sound_rule(rule)),
+        Rule::phoneme_rule => Some(build_phoneme_rule(rule)),
         _ => None,
     }
 }
 
-fn build_phoneme_rule(pair: pest::iterators::Pair<'_, Rule>) -> (&'_ str, Option<&'_ str>) {
+fn build_phoneme_rule(pair: pest::iterators::Pair<'_, Rule>) -> TransformationRule {
     let mut pairs = pair.into_inner();
     let input = pairs.next().map(build_input_output).unwrap();
     let sounds = pairs.as_str();
@@ -245,15 +245,15 @@ fn build_phoneme_rule(pair: pest::iterators::Pair<'_, Rule>) -> (&'_ str, Option
         Some(sounds)
     };
 
-    (input, output)
+    TransformationRule::PhonemeRule { input, output }
 }
 
-fn build_sound_rule(pair: pest::iterators::Pair<'_, Rule>) -> SoundRule<'_> {
+fn build_sound_rule(pair: pest::iterators::Pair<'_, Rule>) -> TransformationRule<'_> {
     let mut pairs = pair.into_inner();
     let environment = pairs.next().map(build_environment).unwrap();
     let input = pairs.next().map(build_input_output).unwrap();
     let output = pairs.next().map(build_input_output);
-    SoundRule {
+    TransformationRule::SoundRule {
         environment,
         input,
         output,

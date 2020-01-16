@@ -2,6 +2,16 @@
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+
+### Added
+
+- Add a subcommand to print the phonology
+
+### Changed
+
+- Created two sub command.
+  One for generating words and one for sounds transformations.
+
 ## [0.2.6] - 2020-01-09
 
 ### Changed

@@ -3,8 +3,8 @@ mod classes;
 mod ordering;
 mod types;
 use std::collections::HashMap;
+use std::fmt;
 pub use types::*;
-
 lazy_static! {
     static ref PHONES: HashMap<char, Phone> = {
         let mut map = HashMap::new();
@@ -115,7 +115,7 @@ lazy_static! {
         map.insert(
             'ʔ',
             Phone::Consonant(Consonant {
-                place: ConsonantPlace::Glotal,
+                place: ConsonantPlace::Glottal,
                 manner: ConsonantManner::Stop,
                 phonation: Phonation::Voiceless,
             }),
@@ -403,7 +403,7 @@ lazy_static! {
         map.insert(
             'h',
             Phone::Consonant(Consonant {
-                place: ConsonantPlace::Glotal,
+                place: ConsonantPlace::Glottal,
                 manner: ConsonantManner::Fricative,
                 phonation: Phonation::Voiceless,
             }),
@@ -411,7 +411,7 @@ lazy_static! {
         map.insert(
             'ɦ',
             Phone::Consonant(Consonant {
-                place: ConsonantPlace::Glotal,
+                place: ConsonantPlace::Glottal,
                 manner: ConsonantManner::Fricative,
                 phonation: Phonation::Voiced,
             }),
@@ -999,5 +999,16 @@ impl TryFrom<char> for Phone {
     type Error = &'static str;
     fn try_from(value: char) -> Result<Self, Self::Error> {
         PHONES.get(&value).copied().ok_or("no match")
+    }
+}
+
+impl fmt::Display for Phone {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let c = PHONES
+            .iter()
+            .find(|(_, phone)| *phone == self)
+            .map(|t| *t.0)
+            .unwrap();
+        write!(f, "{}", c)
     }
 }
