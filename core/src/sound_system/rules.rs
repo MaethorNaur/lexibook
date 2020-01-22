@@ -1,4 +1,4 @@
-use super::{PhonemeRule, Rule, SoundRule, SoundSystem};
+use super::{Rule, SoundSystem};
 use regex::{Captures, Regex};
 
 #[derive(Debug, Default, Serialize, Eq, PartialEq)]
@@ -21,11 +21,11 @@ impl SoundSystem {
             .clone()
             .iter()
             .fold(words, |words, rule| match rule {
-                Rule::SoundRule(SoundRule {
+                Rule::SoundRule {
                     name,
                     regex,
                     replacement,
-                }) => {
+                } => {
                     let regex = Regex::new(&regex).unwrap();
                     let output = words
                         .iter()
@@ -38,10 +38,10 @@ impl SoundSystem {
 
                     output
                 }
-                Rule::PhonemeRule(PhonemeRule {
+                Rule::PhonemeRule {
                     name,
                     phoneme_differences,
-                }) => {
+                } => {
                     self.update_phoneme(phoneme_differences);
                     history.push(History {
                         rule: name.to_string(),
@@ -165,13 +165,13 @@ mod tests {
                     vec!["b".to_string(), "d".to_string(), "g".to_string()],
                 ),
             ],
-            vec![Rule::SoundRule(SoundRule {
+            vec![Rule::SoundRule {
                 name: "V_*V: S -> Z".to_string(),
                 regex:
                     "(a|e|o|y|ä|wa|ë|we|ö|wo)(?P<input>(?P<S>p|t|g))(.*?)(a|e|o|y|ä|wa|ë|we|ö|wo)"
                         .to_string(),
                 replacement: Some("Z".to_string()),
-            })],
+            }],
         );
         let words = vec!["apxal".to_string()];
         let result = sound_system.sound_trasformation(words);
@@ -193,13 +193,13 @@ mod tests {
                 "S".to_string(),
                 vec!["p".to_string(), "t".to_string(), "c".to_string()],
             )],
-            vec![Rule::SoundRule(SoundRule {
+            vec![Rule::SoundRule {
                 name: "V_V: S -> x".to_string(),
                 regex:
                     "(a|e|o|y|ja|wa|je|we|jo|wo)(?P<input>(?P<S>p|t|c))(a|e|o|y|ja|wa|je|we|jo|wo)"
                         .to_string(),
                 replacement: Some("x".to_string()),
-            })],
+            }],
         );
         let words = vec!["apaepal".to_string()];
         let result = sound_system.sound_trasformation(words);
@@ -222,13 +222,13 @@ mod tests {
                 "S".to_string(),
                 vec!["p".to_string(), "t".to_string(), "c".to_string()],
             )],
-            vec![Rule::SoundRule(SoundRule {
+            vec![Rule::SoundRule {
                 name: "V_V: S -> Z".to_string(),
                 regex:
                     "(a|e|o|y|ja|wa|je|we|jo|wo)(?P<input>(?P<S>p|t|c))(a|e|o|y|ja|wa|je|we|jo|wo)"
                         .to_string(),
                 replacement: Some("Z".to_string()),
-            })],
+            }],
         );
         let words = vec!["apal".to_string()];
         let result = sound_system.sound_trasformation(words);
@@ -252,21 +252,21 @@ mod tests {
             ("Z".to_string(),vec!["b".to_string(),"d".to_string(),"g".to_string()])
         ],
         vec![
-        Rule::SoundRule(SoundRule {
+        Rule::SoundRule{
             name: "#_: l -> ".to_string(),
             regex: "^(?P<input>l)".to_string(),
             replacement: None,
-        }),
-        Rule::SoundRule(SoundRule {
+        },
+        Rule::SoundRule{
             name: "_#: l -> ".to_string(),
             regex: "(?P<input>l)$".to_string(),
             replacement: None,
-        }),
-        Rule::SoundRule(SoundRule {
+        },
+        Rule::SoundRule{
             name: "V_V: S -> Z".to_string(), 
             regex: "(a|e|o|y|ja|wa|je|we|jo|wo)(?P<input>(?P<S>p|t|c))(a|e|o|y|ja|wa|je|we|jo|wo)".to_string(),
             replacement: Some("Z".to_string()),
-        })
+        }
         ]);
 
         let words = vec!["la".to_string(), "apaacal".to_string()];

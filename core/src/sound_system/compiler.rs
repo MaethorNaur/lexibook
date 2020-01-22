@@ -1,8 +1,6 @@
 use super::distribution::frequency;
 use super::phone::*;
-use super::{
-    Condition, PhonemeCondition, PhonemeDifference, PhonemeRule, Rule, SoundRule, SoundSystem,
-};
+use super::{Condition, PhonemeCondition, PhonemeDifference, Rule, SoundSystem};
 use crate::wgl::{Environment, TransformationRule, AST};
 use std::collections::HashMap;
 use std::convert::{Into, TryFrom};
@@ -58,19 +56,19 @@ impl SoundSystem {
             .rules
             .iter()
             .map(|rule| match rule {
-                TransformationRule::SoundRule(_) => Rule::SoundRule(SoundRule {
+                TransformationRule::SoundRule { .. } => Rule::SoundRule {
                     name: rule.to_string(),
                     regex: rule_to_regex(&classes, rule),
                     replacement: rule.output().map(|s| s.to_string()),
-                }),
-                TransformationRule::PhonemeRule(_) => Rule::PhonemeRule(PhonemeRule {
+                },
+                TransformationRule::PhonemeRule { .. } => Rule::PhonemeRule {
                     name: rule.to_string(),
                     phoneme_differences: rule_to_phoneme_differences(
                         &classes,
                         rule.input(),
                         rule.output(),
                     ),
-                }),
+                },
             })
             .collect::<Vec<_>>();
         let syllables = ast

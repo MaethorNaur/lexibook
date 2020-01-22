@@ -27,6 +27,7 @@ wasm-bindgen = {version = "0.2", features = ["serde-serialize"], optional = true
 
 [dev-dependencies]
 criterion = "0.3"
+
 [[bench]]
 name = "words_gen"
 harness = false

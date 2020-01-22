@@ -12,4 +12,6 @@ lexibook = {path="../core"}
 log = "0.4.8"
 prettytable-rs = "^0.8"
 clap = {version = "2.33", features = ["yaml"]}
-simple_logger = "1.4.0"
+pest = "2.1.2"
+csv = "1.1.2"
+fern = {version = "0.5", features = ["colored"] }

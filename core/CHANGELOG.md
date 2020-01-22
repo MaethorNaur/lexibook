@@ -2,6 +2,12 @@
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+
+### Added
+
+- `SoundSystem` can return the current phonology
+  (it does not take account about sounds changes)
+
 ## [0.3.0] - 2020-01-16
 
 ### Added
