@@ -2,6 +2,7 @@
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.3.1] - 2020-01-22
 ## [0.3.0] - 2020-01-16
 
 ### Changed
@@ -20,5 +21,6 @@
 
 <!-- next-url -->
 [Unreleased]: https://gitlab.com/lexibook/lexibook/compare/{{tag_name}}...HEAD
+[0.3.1]: https://gitlab.com/lexibook/lexibook/compare/{{tag_name}}...{{tag_name}}
 [0.3.0]: https://gitlab.com/lexibook/lexibook/compare/lexibook-ffi-v0.2.6...{{tag_name}}
 [0.2.6]: https://gitlab.com/lexibook/lexibook/compare/lexibook-ffi-v0.2.5...lexibook-ffi-v0.2.6

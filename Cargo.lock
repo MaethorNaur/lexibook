@@ -421,7 +421,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "lexibook"
-version = "0.3.1-alpha.0"
+version = "0.3.1"
 dependencies = [
  "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "criterion 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -438,12 +438,12 @@ dependencies = [
 
 [[package]]
 name = "lexibook-cli"
-version = "0.3.1-alpha.0"
+version = "0.3.1"
 dependencies = [
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "csv 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "fern 0.5.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "lexibook 0.3.1-alpha.0",
+ "lexibook 0.3.1",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "pest 2.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "prettytable-rs 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -451,11 +451,11 @@ dependencies = [
 
 [[package]]
 name = "lexibook-ffi"
-version = "0.3.1-alpha.0"
+version = "0.3.1"
 dependencies = [
  "cbindgen 0.12.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "lexibook 0.3.1-alpha.0",
+ "lexibook 0.3.1",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "pest 2.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "simple_logger 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -463,10 +463,10 @@ dependencies = [
 
 [[package]]
 name = "lexibook-wasm"
-version = "0.3.1-alpha.0"
+version = "0.3.1"
 dependencies = [
  "console_error_panic_hook 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "lexibook 0.3.1-alpha.0",
+ "lexibook 0.3.1",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde-wasm-bindgen 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen 0.2.58 (registry+https://github.com/rust-lang/crates.io-index)",
