@@ -7,6 +7,16 @@ pub type Distribution = (String, f64);
 pub type PhonemeCondition = (phone::Phones, Condition);
 pub type Phoneme = (String, PhonemeCondition);
 
+#[repr(u8)]
+#[derive(Debug)]
+pub enum MonoSyllableRepartition {
+    Always,
+    Mostly,
+    Frequent,
+    LessFrequent,
+    Rare,
+    Never,
+}
 #[derive(Default, Debug, Serialize)]
 pub struct SoundSystem {
     classes: HashMap<String, Vec<String>>,

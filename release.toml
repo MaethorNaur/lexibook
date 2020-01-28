@@ -1,12 +1,38 @@
 consolidate-commits = true
 disable-publish = true
-tag-prefix=""
+tag-prefix = ''
 disable-tag = false
-pre-release-replacements = [
-  {file="README.md", search="Current release: [a-z0-9\\.-]+", replace="Current release: {{version}}"},
-  {file="CHANGELOG.md", search="Unreleased", replace="{{version}}"},
-  {file="CHANGELOG.md", search="\\.\\.\\.HEAD", replace="...{{tag_name}}"},
-  {file="CHANGELOG.md", search="ReleaseDate", replace="{{date}}"},
-  {file="CHANGELOG.md", search="<!-- next-header -->", replace="<!-- next-header -->\n## [Unreleased] - ReleaseDate"},
-  {file="CHANGELOG.md", search="<!-- next-url -->", replace="<!-- next-url -->\n[Unreleased]: https://gitlab.com/lexibook/lexibook/compare/{{tag_name}}...HEAD"},
-]
+
+[[pre-release-replacements]]
+file = 'README.md'
+search = 'Current release: [a-z0-9\.-]+'
+replace = 'Current release: {{version}}'
+
+[[pre-release-replacements]]
+file = 'CHANGELOG.md'
+search = 'Unreleased'
+replace = '{{version}}'
+
+[[pre-release-replacements]]
+file = 'CHANGELOG.md'
+search = '\.\.\.HEAD'
+replace = '...{{tag_name}}'
+
+[[pre-release-replacements]]
+file = 'CHANGELOG.md'
+search = 'ReleaseDate'
+replace = '{{date}}'
+
+[[pre-release-replacements]]
+file = 'CHANGELOG.md'
+search = '<!-- next-header -->'
+replace = '''
+<!-- next-header -->
+## [Unreleased] - ReleaseDate'''
+
+[[pre-release-replacements]]
+file = 'CHANGELOG.md'
+search = '<!-- next-url -->'
+replace = '''
+<!-- next-url -->
+[Unreleased]: https://gitlab.com/lexibook/lexibook/compare/{{tag_name}}...HEAD'''
