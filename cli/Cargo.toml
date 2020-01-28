@@ -1,17 +1,25 @@
 [package]
-name = "lexibook-cli"
-version = "0.3.2-alpha.0"
-authors = ["Pedro Mangabeira <pedro@2aworld.tech>"]
-edition = "2018"
+name = 'lexibook-cli'
+version = '0.3.2-alpha.0'
+authors = ['Pedro Mangabeira <pedro@2aworld.tech>']
+edition = '2018'
 publish = false
-license = "MIT"
-repository = "https://gitlab.com/lexibook/lexibook"
+license = 'MIT'
+repository = 'https://gitlab.com/lexibook/lexibook'
 
 [dependencies]
-lexibook = {path="../core"}
-log = "0.4.8"
-prettytable-rs = "^0.8"
-clap = {version = "2.33", features = ["yaml"]}
-pest = "2.1.2"
-csv = "1.1.2"
-fern = {version = "0.5", features = ["colored"] }
+log = '0.4.8'
+prettytable-rs = '^0.8'
+pest = '2.1.2'
+csv = '1.1.2'
+
+[dependencies.lexibook]
+path = '../core'
+
+[dependencies.clap]
+version = '2.33'
+features = ['yaml']
+
+[dependencies.fern]
+version = '0.5'
+features = ['colored']
