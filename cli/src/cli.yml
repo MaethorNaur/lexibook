@@ -1,5 +1,5 @@
 name: lexibook
-version: "0.3.1"
+version: "0.3.2"
 author: Pedro Mangabeira <pedro@2aworld.tech>
 about: Generate words and apply sound transformations
 args:
@@ -33,7 +33,7 @@ args:
 subcommands:
   - phonology:
       about: Display phonology
-      version: "0.3.1"
+      version: "0.3.2"
       author: Pedro Mangabeira <pedro@2aworld.tech>
       args:
         - FILE:
@@ -42,7 +42,7 @@ subcommands:
             index: 1
   - words:
       about: Generate words and apply sound transformations
-      version: "0.3.1"
+      version: "0.3.2"
       author: Pedro Mangabeira <pedro@2aworld.tech>
       args:
         - numbers:
@@ -73,7 +73,7 @@ subcommands:
             index: 1
   - sounds:
       about: Apply sound transformation on words
-      version: "0.3.1"
+      version: "0.3.2"
       author: Pedro Mangabeira <pedro@2aworld.tech>
       args:
         - FILE:
