@@ -1,6 +1,6 @@
 [package]
 name = 'lexibook-cli'
-version = "0.3.3-alpha.0"
+version = '0.3.3-alpha.0'
 authors = ['Pedro Mangabeira <pedro@2aworld.tech>']
 edition = '2018'
 publish = false
@@ -12,14 +12,20 @@ log = '0.4.8'
 prettytable-rs = '^0.8'
 pest = '2.1.2'
 csv = '1.1.2'
+structopt = '0.3.8'
+clap-verbosity-flag = '0.3.1'
 
 [dependencies.lexibook]
 path = '../core'
 
-[dependencies.clap]
-version = '2.33'
-features = ['yaml']
-
 [dependencies.fern]
 version = '0.5'
 features = ['colored']
+
+[build-dependencies]
+structopt = '0.3.8'
+clap-verbosity-flag = '0.3.1'
+log = '0.4.8'
+
+[build-dependencies.lexibook]
+path = '../core'
