@@ -1,32 +1,27 @@
 extern crate prettytable;
 #[macro_use]
 extern crate log;
-extern crate fern;
-#[macro_use]
-extern crate clap;
+extern crate clap_verbosity_flag;
 extern crate csv;
+extern crate fern;
 extern crate pest;
+
+mod cli;
 mod errors;
 mod output;
-use clap::{App, ArgMatches};
+use cli::*;
 use errors::*;
 use fern::colors::{Color, ColoredLevelConfig};
 use lexibook::sound_system::rules::Transformation;
-use lexibook::sound_system::{MonoSyllableRepartition, SoundSystem};
-use log::LevelFilter;
+use lexibook::sound_system::SoundSystem;
 use std::convert::From;
 use std::fs::{self, File};
 use std::io::{self, BufRead, Write};
-use std::path::Path;
+use std::path::PathBuf;
+use structopt::StructOpt;
 
-fn setup_log<'a>(matches: &ArgMatches<'a>) {
-    if !matches.is_present("silent") {
-        let level = match matches.occurrences_of("verbose") {
-            0 => LevelFilter::Info,
-            1 => LevelFilter::Debug,
-            _ => LevelFilter::Trace,
-        };
-
+fn setup_log(verbosity: Option<log::Level>) {
+    if let Some(level) = verbosity {
         fern::Dispatch::new()
             .format(move |out, message, record| {
                 use log::Level::*;
@@ -61,7 +56,7 @@ fn setup_log<'a>(matches: &ArgMatches<'a>) {
                     width = 5
                 ))
             })
-            .level(level)
+            .level(level.to_level_filter())
             .chain(std::io::stdout())
             .apply()
             .unwrap();
@@ -69,25 +64,21 @@ fn setup_log<'a>(matches: &ArgMatches<'a>) {
 }
 
 pub fn main() {
-    let yaml = load_yaml!("cli.yml");
-    let mut app = App::from_yaml(yaml);
-    let matches = app.clone().get_matches();
+    let opt = Cli::from_args();
+    setup_log(opt.verbosity());
+    let result = match opt {
+        Cli::Phonology(command) => phonology(command.filename),
+        Cli::Words(command) => words(command),
+        Cli::Sounds(command) => sounds(command),
+    };
 
-    setup_log(&matches);
-    let result = matches
-        .subcommand_matches("words")
-        .map(words)
-        .or_else(|| matches.subcommand_matches("sounds").map(sounds))
-        .or_else(|| matches.subcommand_matches("phonology").map(phonology))
-        .unwrap_or_else(|| app.print_long_help().map_err(From::from));
     match result {
         Ok(_) => (),
         Err(error) => error!("{}", error),
     }
 }
 
-fn phonology<'a>(matches: &ArgMatches<'a>) -> Result<()> {
-    let filename = matches.value_of("FILE").unwrap();
+fn phonology(filename: PathBuf) -> Result<()> {
     let input = Box::leak(fs::read_to_string(filename).unwrap().into_boxed_str());
     lexibook::sound_system::from_string(input)
         .map_err(From::from)
@@ -101,15 +92,18 @@ fn phonology<'a>(matches: &ArgMatches<'a>) -> Result<()> {
         })
 }
 
-fn words<'a>(matches: &ArgMatches<'a>) -> Result<()> {
-    let filename = matches.value_of("FILE").unwrap();
-    let skip_transformation = matches.is_present("skip_transformation");
+fn words(command: Words) -> Result<()> {
+    let input = Box::leak(
+        fs::read_to_string(command.filename.as_path())
+            .unwrap()
+            .into_boxed_str(),
+    );
 
-    let numbers = value_t!(matches, "numbers", usize).unwrap_or(10);
-    let repartition = value_t!(matches, "syllable", MonoSyllableRepartition)
-        .unwrap_or(MonoSyllableRepartition::LessFrequent);
-    let maybe_output = matches.value_of("output");
-    let input = Box::leak(fs::read_to_string(filename).unwrap().into_boxed_str());
+    let numbers = command.numbers;
+    let repartition = command.repartition;
+    let pretty = command.common.pretty;
+    let maybe_output = command.common.output;
+    let skip_transformation = command.skip_transformation;
 
     lexibook::sound_system::from_string(input)
         .map_err(From::from)
@@ -123,27 +117,27 @@ fn words<'a>(matches: &ArgMatches<'a>) -> Result<()> {
             } else {
                 sound_system.sound_trasformation(words.clone())
             };
-            pretty_print(
-                matches.is_present("display_transformations"),
-                &sound_system,
-                words,
-                transformations,
-                maybe_output,
-            )
+            pretty_print(pretty, &sound_system, words, transformations, maybe_output)
         })
         .map_err(From::from)
 }
 
-fn sounds<'a>(matches: &ArgMatches<'a>) -> Result<()> {
-    let filename = matches.value_of("FILE").unwrap();
-    let input = Box::leak(fs::read_to_string(filename).unwrap().into_boxed_str());
+fn sounds(command: Sounds) -> Result<()> {
+    let input = Box::leak(
+        fs::read_to_string(command.filename.as_path())
+            .unwrap()
+            .into_boxed_str(),
+    );
 
-    let maybe_output = matches.value_of("output");
+    let pretty = command.common.pretty;
+    let maybe_output = command.common.output;
+    let input_words = command.input;
+
     lexibook::sound_system::from_string(input)
         .map_err(From::from)
         .and_then(|mut sound_system| {
             let stdin = io::stdin();
-            let words: Result<Vec<String>> = match matches.value_of("INPUT") {
+            let words: Result<Vec<String>> = match input_words {
                 Some(filename) => File::open(filename).map_err(From::from).map(|file| {
                     io::BufReader::new(file)
                         .lines()
@@ -155,13 +149,7 @@ fn sounds<'a>(matches: &ArgMatches<'a>) -> Result<()> {
 
             words.and_then(|words| {
                 let transformations = sound_system.sound_trasformation(words.clone());
-                pretty_print(
-                    matches.is_present("display_transformations"),
-                    &sound_system,
-                    words,
-                    transformations,
-                    maybe_output,
-                )
+                pretty_print(pretty, &sound_system, words, transformations, maybe_output)
             })
         })
 }
@@ -171,10 +159,11 @@ fn pretty_print(
     sound_system: &SoundSystem,
     words: Vec<String>,
     transformations: Transformation,
-    maybe_output: Option<&str>,
+    maybe_output: Option<PathBuf>,
 ) -> Result<()> {
     if pretty {
         let table = output::create_table(&sound_system, words, transformations);
+        let maybe_output = maybe_output.as_ref().and_then(|p| p.to_str());
         match maybe_output {
             Some(output) => output::csv(&table, output),
             None => output::stdout(&table),
@@ -182,15 +171,12 @@ fn pretty_print(
     } else {
         let stdout = io::stdout();
         let mut writer: Box<dyn Write> = match maybe_output {
-            Some(output) => {
-                let path = Path::new(output);
-                Box::new(File::create(&path).unwrap())
-            }
+            Some(path) => Box::new(File::create(path).unwrap()),
             None => Box::new(stdout.lock()),
         };
         writer
             .write_all(transformations.output.join("\n").as_bytes())
-            .and_then(|_| writer.write("\n".as_bytes()))
+            .and_then(|_| writer.write(b"\n"))
             .map(|_| ())
             .map_err(From::from)
     }

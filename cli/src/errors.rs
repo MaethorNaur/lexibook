@@ -9,7 +9,6 @@ pub enum Error {
     IO(io::Error),
     Parse(pest::error::Error<lexibook::wgl::Rule>),
     Csv(csv::Error),
-    Clap(clap::Error),
 }
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -17,7 +16,6 @@ impl fmt::Display for Error {
             Error::IO(e) => e.fmt(f),
             Error::Parse(e) => e.fmt(f),
             Error::Csv(e) => e.fmt(f),
-            Error::Clap(e) => e.fmt(f),
         }
     }
 }
@@ -40,19 +38,12 @@ impl From<csv::Error> for Error {
     }
 }
 
-impl From<clap::Error> for Error {
-    fn from(e: clap::Error) -> Self {
-        Error::Clap(e)
-    }
-}
-
 impl error::Error for Error {
     fn description(&self) -> &str {
         match self {
             Error::IO(e) => e.description(),
             Error::Parse(e) => e.description(),
             Error::Csv(e) => e.description(),
-            Error::Clap(e) => e.description(),
         }
     }
 
@@ -61,7 +52,6 @@ impl error::Error for Error {
             Error::IO(e) => e.source(),
             Error::Parse(e) => e.source(),
             Error::Csv(e) => e.source(),
-            Error::Clap(e) => e.source(),
         }
     }
 }
