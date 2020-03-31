@@ -15,14 +15,14 @@ repository = 'https://gitlab.com/lexibook/lexibook'
 crate-type = ['rlib']
 
 [dependencies]
-log = '0.4.8'
-pest = '2.1.2'
-pest_derive = '2.1.0'
+log = '0.4'
+pest = '2.1'
+pest_derive = '2.1'
 rand = '0.7'
 regex = '1'
 serde = '1'
 serde_derive = '1'
-lazy_static = '1.4.0'
+lazy_static = '1.4'
 
 [dev-dependencies]
 criterion = '0.3'
