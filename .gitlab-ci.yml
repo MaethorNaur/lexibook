@@ -3,7 +3,7 @@ cache:
     untracked: true
     paths:
     - $HOME/.cargo/
-    - target/
+    - rust/target/
 
 stages: 
  - test
@@ -20,6 +20,7 @@ stages:
     CARGO_INCREMENTAL: "0"
     RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads"
   script:
+    - cd rust
     - cargo clean
     - cargo build
     - cargo test 
@@ -34,6 +35,7 @@ lint:rustfmt:
   stage: test
   image: "guangie88/rustfmt-clippy:nightly"
   script:
+    - cd rust
     - cargo fmt -- --check
 
 lint:clippy:
@@ -42,6 +44,7 @@ lint:clippy:
   stage: test
   image: "guangie88/rustfmt-clippy:stable"
   script:
+    - cd rust
     - cargo clippy --all-features -- -D warnings
 
 test:coverage:

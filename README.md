@@ -1,23 +1,16 @@
-# Lexibook
+# lexibook_flutter
 
-[![Coverage Status](https://coveralls.io/repos/gitlab/lexibook/lexibook/badge.svg?branch=master)](https://coveralls.io/gitlab/lexibook/lexibook?branch=master)
+A new Flutter project.
 
-## CLI
+## Getting Started
 
-- [README](https://gitlab.com/lexibook/lexibook/blob/master/src/cli/README.md)
-- [CHANGELOG](https://gitlab.com/lexibook/lexibook/blob/master/src/cli/CHANGELOG.md)
+This project is a starting point for a Flutter application.
 
-## Core
+A few resources to get you started if this is your first Flutter project:
 
-- [README](https://gitlab.com/lexibook/lexibook/blob/master/src/core/README.md)
-- [CHANGELOG](https://gitlab.com/lexibook/lexibook/blob/master/src/core/CHANGELOG.md)
+- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
 
-## FFI
-
-- [README](https://gitlab.com/lexibook/lexibook/blob/master/src/ffi/README.md)
-- [CHANGELOG](https://gitlab.com/lexibook/lexibook/blob/master/src/ffi/CHANGELOG.md)
-
-## WASM
-
-- [README](https://gitlab.com/lexibook/lexibook/blob/master/src/wasm/README.md)
-- [CHANGELOG](https://gitlab.com/lexibook/lexibook/blob/master/src/wasm/CHANGELOG.md)
+For help getting started with Flutter, view our
+[online documentation](https://flutter.dev/docs), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
