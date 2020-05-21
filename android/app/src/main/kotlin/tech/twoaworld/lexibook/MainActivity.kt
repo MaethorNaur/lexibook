@@ -1,4 +1,4 @@
-package tech.twoaworld.lexibook_flutter
+package tech.twoaworld.lexibook
 
 import io.flutter.embedding.android.FlutterActivity
 
