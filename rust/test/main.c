@@ -1,4 +1,4 @@
-#include "../src/ffi/lexibook.h"
+#include "../ffi/lexibook.h"
 #include <stdio.h>
 
 int main(int argc, const char *argv[]) {
@@ -15,11 +15,11 @@ int main(int argc, const char *argv[]) {
     return 1;
   }
 
-  lexibook_api_StringList words =
+  lexibook_api_StringList* words =
       lexibook_generate_words(ptr, 10, LessFrequent);
   printf("Words:\n");
-  for (int i = 0; i < words.length; i++) {
-    printf("%s\n", words.items[i]);
+  for (int i = 0; i < words->length; i++) {
+    printf("%s\n", words->items[i]);
   }
 
   lexibook_string_list_free(words);

@@ -27,13 +27,6 @@ impl fmt::Display for Error {
 }
 
 impl error::Error for Error {
-    fn description(&self) -> &str {
-        match self {
-            Error::IO(e) => e.description(),
-            Error::Parse(e) => e.description(),
-        }
-    }
-
     fn cause(&self) -> Option<&dyn error::Error> {
         match self {
             Error::IO(e) => e.source(),

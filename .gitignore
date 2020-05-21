@@ -75,3 +75,5 @@ project/plugins/project/
 #**/*.rs.bk
 test/*.o
 test/test
+.metals/
+android/key.properties

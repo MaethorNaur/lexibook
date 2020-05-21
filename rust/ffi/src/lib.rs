@@ -77,11 +77,11 @@ pub extern "C" fn lexibook_generate_words(
     ptr: *mut c_void,
     number_of_words: u32,
     repartition: MonoSyllableRepartition,
-) -> StringList {
+) -> *mut StringList {
     let sound_system = unsafe {
         assert!(!ptr.is_null());
         &mut *(ptr as *mut SoundSystem)
     };
     let generated_words = sound_system.generate_words(number_of_words as usize, repartition.into());
-    StringList::from(generated_words)
+    Box::into_raw(Box::new(StringList::from(generated_words)))
 }

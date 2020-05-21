@@ -39,14 +39,6 @@ impl From<csv::Error> for Error {
 }
 
 impl error::Error for Error {
-    fn description(&self) -> &str {
-        match self {
-            Error::IO(e) => e.description(),
-            Error::Parse(e) => e.description(),
-            Error::Csv(e) => e.description(),
-        }
-    }
-
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
             Error::IO(e) => e.source(),
