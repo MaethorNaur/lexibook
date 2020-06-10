@@ -5,12 +5,12 @@ use structopt::StructOpt;
 #[allow(dead_code)]
 fn variants() -> [&'static str; 6] {
     [
-        stringify!(MonoSyllableRepartition::Always),
-        stringify!(MonoSyllableRepartition::Mostly),
-        stringify!(MonoSyllableRepartition::Frequent),
-        stringify!(MonoSyllableRepartition::LessFrequent),
-        stringify!(MonoSyllableRepartition::Rare),
-        stringify!(MonoSyllableRepartition::Never),
+        "always",
+        "mostly",
+        "frequent",
+        "less_frequent",
+        "rare",
+        "never",
     ]
 }
 
@@ -43,7 +43,7 @@ pub struct Words {
     #[structopt(short, long, default_value = "10")]
     pub numbers: usize,
     /// Repartition of mono syllable words. Default to "less_frequent"
-    #[structopt(short, long, possible_values= &variants())]
+    #[structopt(short, long, default_value="less_frequent" , possible_values= &variants(), case_insensitive = true)]
     pub repartition: MonoSyllableRepartition,
     /// Not apply sound transformations
     #[structopt(long = "no-sound-transformations")]
