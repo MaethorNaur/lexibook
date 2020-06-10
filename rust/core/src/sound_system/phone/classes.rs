@@ -59,9 +59,18 @@ impl Phone {
                         result.push("W")
                     }
                 }
+
                 match phonation {
-                    Phonation::Voiced => result.push("Z"),
-                    _ => result.push("S"),
+                    Phonation::Voiced => {
+                        if self.has_opposite() {
+                            result.push("Z")
+                        }
+                    }
+                    _ => {
+                        if self.has_opposite() {
+                            result.push("S")
+                        }
+                    }
                 }
                 Some(result)
             }

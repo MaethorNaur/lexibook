@@ -27,7 +27,9 @@ impl SoundSystem {
                     .collect::<Vec<_>>();
                 phonemes.insert((*letter).to_string(), (phones, condition.clone().into()));
             });
+
         let mut classes: HashMap<String, Vec<String>> = HashMap::new();
+
         let mut sorted_phonemes: Vec<_> = phonemes
             .iter()
             .filter(|(repr, _)| ast.letters.iter().any(|(letter, _)| letter == repr))
@@ -39,7 +41,7 @@ impl SoundSystem {
         for (repr, (phones, _)) in &sorted_phonemes {
             if let Some(phone_classes) = phones.get(0).unwrap().classes() {
                 for classe in phone_classes {
-                    let vec = classes.entry(classe.to_string()).or_insert_with(|| vec![]);
+                    let vec = classes.entry(classe.to_string()).or_insert_with(Vec::new);
                     vec.push((*repr).to_string());
                 }
             }
