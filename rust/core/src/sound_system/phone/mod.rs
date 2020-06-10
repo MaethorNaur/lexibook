@@ -1012,3 +1012,23 @@ impl fmt::Display for Phone {
         write!(f, "{}", c)
     }
 }
+
+impl Phone {
+    pub fn has_opposite(&self) -> bool {
+        match self {
+            Phone::Consonant(consonant) => {
+                let phonation = match consonant.phonation {
+                    Phonation::Voiced => Phonation::Voiceless,
+                    Phonation::Voiceless => Phonation::Voiced,
+                    _ => consonant.phonation,
+                };
+                let opposite = Phone::Consonant(Consonant {
+                    phonation,
+                    ..*consonant
+                });
+                PHONES.iter().any(|(_, phone)| *phone == opposite)
+            }
+            _ => false,
+        }
+    }
+}
