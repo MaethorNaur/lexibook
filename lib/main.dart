@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'bindings/lexibook.dart';
 import 'screens/home.dart';
+import 'package:flutter/foundation.dart' as Foundation;
 
 void main() {
-  initLogger(LogLevel.Trace);
+  if (Foundation.kReleaseMode) {
+    initLogger(LogLevel.Info);
+  } else {
+    initLogger(LogLevel.Trace);
+  }
   runApp(LexibookApp());
 }
 
