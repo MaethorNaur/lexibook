@@ -19,7 +19,7 @@ else ()
     set(TARGET_DIR "release")
 endif ()
 
-set(FFI_DLL "${RUST_DIR}/${TARGET_DIR}/lexibook_ffi.dll")
+set(FFI_DLL "${RUST_DIR}/target/${TARGET_DIR}/lexibook_ffi.dll")
 
 # Configure build options.
 get_property(IS_MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
