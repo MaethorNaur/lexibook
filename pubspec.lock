@@ -75,7 +75,7 @@ packages:
       name: flutter_neumorphic
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.0"
+    version: "2.2.2"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -164,4 +164,5 @@ packages:
     source: hosted
     version: "2.1.0-nullsafety"
 sdks:
-  dart: ">=2.9.0-18.0 <2.9.0"
+  dart: ">=2.9.0-14.0.dev <3.0.0"
+  flutter: ">=1.13.18 <2.0.0"
