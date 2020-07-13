@@ -77,3 +77,5 @@ test/*.o
 test/test
 .metals/
 android/key.properties
+windows/lexibook_ffi.dll
+.vscode/

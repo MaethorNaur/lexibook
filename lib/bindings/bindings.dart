@@ -17,7 +17,9 @@ class _Bindings {
   _Bindings() {
     lexibook = Platform.isAndroid
         ? DynamicLibrary.open("liblexibook_ffi.so")
-        : DynamicLibrary.process();
+        :(Platform.isWindows ?
+          DynamicLibrary.open("lexibook_ffi.dll")
+        : DynamicLibrary.process());
 
     init_logger = lexibook
         .lookup<NativeFunction<lexibook_init_logger_t>>('lexibook_init_logger')
