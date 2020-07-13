@@ -18,19 +18,23 @@ class LexibookApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
         title: 'Lexibook',
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          primarySwatch: Colors.green,
         ),
         home: NeumorphicTheme(
             usedTheme: UsedTheme.LIGHT,
-            theme: NeumorphicThemeData(
-              baseColor: Color(0xFFFFFFFF),
-              lightSource: LightSource.topLeft,
-              depth: 10,
-            ),
             darkTheme: NeumorphicThemeData(
-              baseColor: Color(0xFF3E3E3E),
+              baseColor: Colors.grey[800],
+              accentColor: Colors.green,
+              lightSource: LightSource.topLeft,
+              depth: 4,
+              intensity: 0.3,
+            ),
+            theme: NeumorphicThemeData(
+              baseColor: Colors.grey[200],
+              accentColor: Colors.cyan,
               lightSource: LightSource.topLeft,
               depth: 6,
+              intensity: 0.5,
             ),
             child: HomeScreen()),
       );

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:lexibook/bindings/lexibook.dart';
 import 'widget_input.dart';
+import 'frequency.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -34,22 +35,24 @@ V_V: S -> Z
   List<String> _words = [];
   double _numbers = 10;
   SoundSystem _soundSystem;
+  MonoSyllableRepartition frequency = MonoSyllableRepartition.LessFrequent;
 
   void _parseString(String text) {
-    if (_soundSystem != null) {
-      _soundSystem.close();
-    }
-    try {
-      _soundSystem = SoundSystem.parseString(text);
-    } catch (e) {
-      print("Error: $e");
-    }
+    setState(() {
+      if (_soundSystem != null) {
+        _soundSystem.close();
+      }
+      try {
+        _soundSystem = SoundSystem.parseString(text);
+      } catch (e) {
+        print("Error: $e");
+      }
+    });
   }
 
   void _generateWords() {
     setState(() {
-      _words = _soundSystem.generateWords(
-          _numbers.toInt(), MonoSyllableRepartition.LessFrequent);
+      _words = _soundSystem.generateWords(_numbers.toInt(), frequency);
     });
   }
 
@@ -92,30 +95,37 @@ V_V: S -> Z
                   style: TextStyle(color: _textColor(context)),
                 )),
             WidgetInputScreen(wglCallback: _parseString, initText: _initText),
-            Row(
-              mainAxisSize: MainAxisSize.max,
-              children: <Widget>[
-                Text(
-                  "Words: ",
-                  style: TextStyle(color: _textColor(context)),
-                ),
-                Flexible(
-                  child: NeumorphicSlider(
-                    min: 10,
-                    max: 100,
-                    value: _numbers,
-                    onChanged: (value) {
-                      setState(() {
-                        _numbers = value;
-                      });
-                    },
+            Padding(
+              padding: EdgeInsets.all(10),
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                children: <Widget>[
+                  Text(
+                    "Words: ",
+                    style: TextStyle(color: _textColor(context)),
                   ),
-                ),
-                Text(
-                  "${_numbers.toInt()}",
-                  style: TextStyle(color: _textColor(context)),
-                ),
-              ],
+                  Flexible(
+                    child: NeumorphicSlider(
+                      min: 10,
+                      max: 100,
+                      value: _numbers,
+                      onChanged: (value) {
+                        setState(() {
+                          _numbers = value;
+                        });
+                      },
+                    ),
+                  ),
+                  Text(
+                    "${_numbers.toInt()}",
+                    style: TextStyle(color: _textColor(context)),
+                  ),
+                ],
+              ),
+            ),
+            FrequencyWidget(
+              defaultValue: frequency,
+              callback: (value) => setState(() => frequency = value),
             ),
             Expanded(
               child: ListView.builder(
