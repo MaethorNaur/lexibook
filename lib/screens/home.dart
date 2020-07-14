@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:lexibook/bindings/lexibook.dart';
-import 'widget_input.dart';
 import 'frequency.dart';
+import 'package:lexibook/helpers/display.dart';
+import 'package:lexibook/file_picker/file_picker.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -35,15 +36,19 @@ V_V: S -> Z
   List<String> _words = [];
   double _numbers = 10;
   SoundSystem _soundSystem;
-  MonoSyllableRepartition frequency = MonoSyllableRepartition.LessFrequent;
+  MonoSyllableRepartition _frequency = MonoSyllableRepartition.LessFrequent;
+  String _filename = "";
+  final ScrollController _scrollController = ScrollController();
+  final FilePickerCross filePickerCross = FilePickerCross(fileExtension: 'wgl');
 
-  void _parseString(String text) {
+  void _parseFile(String file) {
     setState(() {
       if (_soundSystem != null) {
         _soundSystem.close();
       }
       try {
-        _soundSystem = SoundSystem.parseString(text);
+        _soundSystem = SoundSystem.parseFile(file);
+        _filename = file;
       } catch (e) {
         print("Error: $e");
       }
@@ -52,14 +57,14 @@ V_V: S -> Z
 
   void _generateWords() {
     setState(() {
-      _words = _soundSystem.generateWords(_numbers.toInt(), frequency);
+      _words = _soundSystem.generateWords(_numbers.toInt(), _frequency);
     });
   }
 
   @override
-  void initState() {
-    super.initState();
-    _parseString(_initText);
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -78,23 +83,47 @@ V_V: S -> Z
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-            NeumorphicButton(
-                margin: EdgeInsets.only(top: 12),
-                onClick: () {
-                  NeumorphicTheme.of(context).usedTheme =
-                      NeumorphicTheme.isUsingDark(context)
-                          ? UsedTheme.LIGHT
-                          : UsedTheme.DARK;
-                },
-                style: NeumorphicStyle(shape: NeumorphicShape.flat),
-                boxShape:
-                    NeumorphicBoxShape.roundRect(BorderRadius.circular(8)),
-                padding: const EdgeInsets.all(12.0),
-                child: Text(
-                  "Toggle Theme",
-                  style: TextStyle(color: _textColor(context)),
-                )),
-            WidgetInputScreen(wglCallback: _parseString, initText: _initText),
+            Row(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                NeumorphicButton(
+                  margin: EdgeInsets.only(top: 12),
+                  onPressed: () {
+                    NeumorphicTheme.of(context).usedTheme =
+                        NeumorphicTheme.isUsingDark(context)
+                            ? UsedTheme.LIGHT
+                            : UsedTheme.DARK;
+                  },
+                  style: NeumorphicStyle(shape: NeumorphicShape.flat),
+                  boxShape:
+                      NeumorphicBoxShape.roundRect(BorderRadius.circular(8)),
+                  padding: const EdgeInsets.all(12.0),
+                  child: Text(
+                    "Toggle Theme",
+                    style: Dispaly.mainText(context),
+                  ),
+                ),
+                NeumorphicButton(
+                    margin: EdgeInsets.only(top: 12),
+                    onPressed: () async {
+                      String path = await filePickerCross.pick();
+                      _parseFile(path);
+                    },
+                    style: NeumorphicStyle(shape: NeumorphicShape.flat),
+                    boxShape:
+                        NeumorphicBoxShape.roundRect(BorderRadius.circular(8)),
+                    padding: const EdgeInsets.all(12.0),
+                    child: Text(
+                      "Load file",
+                      style: Dispaly.mainText(context),
+                    )),
+                Text(
+                  "$_filename",
+                  style: Dispaly.mainText(context),
+                ),
+              ],
+            ),
             Padding(
               padding: EdgeInsets.all(10),
               child: Row(
@@ -102,7 +131,7 @@ V_V: S -> Z
                 children: <Widget>[
                   Text(
                     "Words: ",
-                    style: TextStyle(color: _textColor(context)),
+                    style: Dispaly.mainText(context),
                   ),
                   Flexible(
                     child: NeumorphicSlider(
@@ -124,36 +153,41 @@ V_V: S -> Z
               ),
             ),
             FrequencyWidget(
-              defaultValue: frequency,
-              callback: (value) => setState(() => frequency = value),
+              defaultValue: _frequency,
+              callback: (value) => setState(() => _frequency = value),
             ),
             Expanded(
-              child: ListView.builder(
-                  padding: const EdgeInsets.all(8),
-                  itemCount: _words.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return Neumorphic(
-                      boxShape: NeumorphicBoxShape.roundRect(
-                          BorderRadius.circular(12)),
-                      style: NeumorphicStyle(
-                        shape: NeumorphicShape.flat,
-                      ),
-                      margin: EdgeInsets.all(16).copyWith(top: 8),
-                      padding: EdgeInsets.all(16),
-                      child: Center(
-                        child: Text(
-                          _words[index],
-                          style: TextStyle(color: _textColor(context)),
+              child: Scrollbar(
+                isAlwaysShown: true,
+                controller: _scrollController,
+                child: ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(8),
+                    itemCount: _words.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return Neumorphic(
+                        boxShape: NeumorphicBoxShape.roundRect(
+                            BorderRadius.circular(12)),
+                        style: NeumorphicStyle(
+                          shape: NeumorphicShape.flat,
                         ),
-                      ),
-                    );
-                  }),
+                        margin: EdgeInsets.all(16).copyWith(top: 8),
+                        padding: EdgeInsets.all(16),
+                        child: Center(
+                          child: Text(
+                            _words[index],
+                            style: TextStyle(color: _textColor(context)),
+                          ),
+                        ),
+                      );
+                    }),
+              ),
             ),
           ],
         ),
       ),
       floatingActionButton: NeumorphicButton(
-        onClick: _generateWords,
+        onPressed: _generateWords,
         boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12)),
         style: NeumorphicStyle(
           shape: NeumorphicShape.flat,

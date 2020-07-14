@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'bindings/lexibook.dart';
 import 'screens/home.dart';
-import 'package:flutter/foundation.dart' as Foundation;
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 void main() {
-  if (Foundation.kReleaseMode) {
+  LicenseRegistry.addLicense(() async* {
+    final license = await rootBundle.loadString('google_fonts/OFL.txt');
+    yield LicenseEntryWithLineBreaks(['google_fonts'], license);
+  });
+  if (kReleaseMode) {
     initLogger(LogLevel.Info);
   } else {
     initLogger(LogLevel.Trace);

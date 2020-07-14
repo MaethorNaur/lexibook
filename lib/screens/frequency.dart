@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:meta/meta.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:lexibook/bindings/lexibook.dart';
+import 'package:lexibook/helpers/display.dart';
 
 class FrequencyWidget extends StatefulWidget {
   final ValueChanged<MonoSyllableRepartition> callback;
@@ -62,7 +63,7 @@ class _FrequencyState extends State<FrequencyWidget> {
           padding: const EdgeInsets.all(12.0),
           child: Text(
             name,
-            style: TextStyle(color: _textColor(context)),
+            style: Dispaly.mainText(context),
           ));
     }).toList();
 
@@ -74,7 +75,7 @@ class _FrequencyState extends State<FrequencyWidget> {
         children: <Widget>[
           Text(
             "Frequency",
-            style: TextStyle(color: _textColor(context)),
+            style: Dispaly.mainText(context),
           ),
           SizedBox(width: 12),
         ]..addAll(children),
