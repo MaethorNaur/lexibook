@@ -9,7 +9,6 @@
         android:name="io.flutter.app.FlutterApplication"
         android:label="lexibook"
         android:icon="@mipmap/ic_launcher"
-        android:requestLegacyExternalStorage="true"
         android:extractNativeLibs="false">
         <activity
             android:name=".MainActivity"
