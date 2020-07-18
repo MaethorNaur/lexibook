@@ -1,0 +1,29 @@
+name: Rust
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run tests
+      run: cargo test --verbose
+      working-directory: rust
+    - name: rust-clippy-check
+      uses: actions-rs/clippy-check@v1.0.7
+      with:
+        # GitHub token
+        token: ${{ secrets.GITHUB_TOKEN }}
+        # Toolchain to use (without the `+` sign, ex. `nightly`)
+        toolchain: nightly
+    - name: Build
+      run: cargo build --verbose
+      working-directory: rust
