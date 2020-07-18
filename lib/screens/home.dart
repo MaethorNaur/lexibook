@@ -4,7 +4,7 @@ import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:lexibook/bindings/lexibook.dart';
 import 'frequency.dart';
 import 'package:lexibook/helpers/display.dart';
-import 'package:lexibook/file_picker/file_picker.dart';
+import 'package:lexibook/file_picker.dart' as FilePicker;
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -18,7 +18,6 @@ class _HomeScreenState extends State<HomeScreen> {
   MonoSyllableRepartition _frequency = MonoSyllableRepartition.LessFrequent;
   String _filename = "";
   final ScrollController _scrollController = ScrollController();
-  final FilePickerCross filePickerCross = FilePickerCross(fileExtension: 'wgl');
 
   void _parseFile(String file) {
     setState(() {
@@ -57,6 +56,34 @@ class _HomeScreenState extends State<HomeScreen> {
     ));
     return Scaffold(
       backgroundColor: NeumorphicTheme.baseColor(context),
+      appBar: NeumorphicAppBar(
+        title: Text("Lexibook"),
+      ),
+      endDrawer: Drawer(
+        child: Container(
+          color: NeumorphicTheme.baseColor(context),
+          child: Column(
+            children: [
+              ConstrainedBox(
+                constraints: BoxConstraints.tightFor(
+                    height: NeumorphicAppBar.toolbarHeight),
+                child: NeumorphicAppBar(
+                  title: Text('Menu'),
+                  leading: NeumorphicCloseButton(),
+                  actions: <Widget>[
+                    NeumorphicButton(
+                      child: Icon(Icons.style),
+                      onPressed: () {},
+                    ),
+                    NeumorphicBackButton(forward: true),
+                  ],
+                ),
+              ),
+              Spacer(),
+            ],
+          ),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -84,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 NeumorphicButton(
                     margin: EdgeInsets.only(top: 12),
                     onPressed: () async {
-                      String path = await filePickerCross.pick();
+                      String path = await FilePicker.getFilePath('wgl');
                       _parseFile(path);
                     },
                     style: Display.flatRounded(),
@@ -162,7 +189,8 @@ class _HomeScreenState extends State<HomeScreen> {
         style: Display.flatRounded(),
         child: NeumorphicIcon(
           Icons.keyboard_return,
-          style: NeumorphicStyle(color: NeumorphicTheme.of(context).current.accentColor),
+          style: NeumorphicStyle(
+              color: NeumorphicTheme.of(context).current.accentColor),
         ),
       ),
     );
