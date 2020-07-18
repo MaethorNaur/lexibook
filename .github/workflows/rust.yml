@@ -16,8 +16,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Run tests
       run: |
-        cargo fmt -- --check
-        cargo clippy --all-features -- -D warnings
+        cargo +nightly fmt -- --check
+        cargo +nightly clippy --all-features -- -D warnings
         cargo test 
       working-directory: rust
     - name: Build
