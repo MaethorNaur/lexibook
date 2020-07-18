@@ -82,13 +82,12 @@ fn phonology(filename: PathBuf) -> Result<()> {
     let input = Box::leak(fs::read_to_string(filename).unwrap().into_boxed_str());
     lexibook::sound_system::from_string(input)
         .map_err(From::from)
-        .and_then(|sound_system| {
+        .map(|sound_system| {
             let (consonants_table, vowel_table) = output::create_phonology_tables(sound_system);
             println!("Consonants\n");
             consonants_table.printstd();
             println!("\nVowels\n");
             vowel_table.printstd();
-            Ok(())
         })
 }
 
