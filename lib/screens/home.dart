@@ -4,6 +4,7 @@ import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:lexibook/bindings/lexibook.dart';
 import 'frequency.dart';
 import 'package:lexibook/helpers/display.dart';
+import 'package:optional/optional.dart';
 import 'package:lexibook/file_picker.dart' as FilePicker;
 
 class HomeScreen extends StatefulWidget {
@@ -27,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
       try {
         _soundSystem = SoundSystem.parseFile(file);
         _filename = file;
+        _words = [];
       } catch (e) {
         print("Error: $e");
       }
@@ -109,17 +111,36 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 NeumorphicButton(
-                    margin: EdgeInsets.only(top: 12),
-                    onPressed: () async {
-                      String path = await FilePicker.getFilePath('wgl');
-                      _parseFile(path);
-                    },
-                    style: Display.flatRounded(),
-                    padding: const EdgeInsets.all(12.0),
-                    child: Text(
-                      "Load file",
-                      style: Display.mainText(context),
-                    )),
+                  margin: EdgeInsets.only(top: 12),
+                  onPressed: () async {
+                    Optional<String> maybePath =
+                        await FilePicker.openFilePath('wgl');
+                    maybePath.ifPresent((path) => _parseFile(path));
+                  },
+                  style: Display.flatRounded(),
+                  padding: const EdgeInsets.all(12.0),
+                  child: Text(
+                    "Load file",
+                    style: Display.mainText(context),
+                  ),
+                ),
+                NeumorphicButton(
+                  margin: EdgeInsets.only(top: 12),
+                  onPressed: _soundSystem != null
+                      ? () async {
+                          Optional<String> maybePath =
+                              await FilePicker.saveFilePath('wgl');
+                          maybePath
+                              .ifPresent((path) => _soundSystem.save(path));
+                        }
+                      : null,
+                  style: Display.flatRounded(),
+                  padding: const EdgeInsets.all(12.0),
+                  child: Text(
+                    "Save file",
+                    style: Display.mainText(context),
+                  ),
+                ),
                 Text(
                   "$_filename",
                   style: Display.mainText(context),

@@ -1,6 +1,7 @@
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'bindings.dart';
+
 enum LogLevel {
   Trace,
   Debug,
@@ -17,6 +18,7 @@ enum MonoSyllableRepartition {
   Rare,
   Never,
 }
+
 void initLogger(LogLevel level) {
   bindings.init_logger(level.index);
 }
@@ -62,5 +64,19 @@ class SoundSystem {
     return result;
   }
 
-  void close() {  bindings.sound_system_free(_ptr);}
+  void save(String filename) {
+    var utf8Input = Utf8.toUtf8(filename);
+    var result = bindings.save_file(_ptr, utf8Input);
+    free(utf8Input);
+    if (result == 0) {
+      var lastErrorPtr = bindings.last_error_message();
+      var lastError = Utf8.fromUtf8(lastErrorPtr);
+      free(lastErrorPtr);
+      throw Exception(lastError);
+    }
+  }
+
+  void close() {
+    bindings.sound_system_free(_ptr);
+  }
 }
