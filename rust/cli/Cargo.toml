@@ -19,7 +19,7 @@ clap-verbosity-flag = '0.3.1'
 path = '../core'
 
 [dependencies.fern]
-version = '0.5'
+version = '0.6'
 features = ['colored']
 
 [build-dependencies]
