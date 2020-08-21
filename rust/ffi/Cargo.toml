@@ -28,4 +28,4 @@ version = '0.17'
 default-features = false
 
 [build-dependencies]
-cbindgen = '0.14.3'
+cbindgen = '0.14.4'
