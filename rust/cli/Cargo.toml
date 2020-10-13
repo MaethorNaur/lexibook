@@ -1,6 +1,6 @@
 [package]
 name = 'lexibook-cli'
-version = '0.3.3-alpha.0'
+version = "0.3.3"
 authors = ['Pedro Mangabeira <pedro@2aworld.tech>']
 edition = '2018'
 publish = false

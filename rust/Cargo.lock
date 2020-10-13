@@ -507,7 +507,7 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "lexibook"
-version = "0.3.3-alpha.0"
+version = "0.3.3"
 dependencies = [
  "criterion",
  "lazy_static",
@@ -522,7 +522,7 @@ dependencies = [
 
 [[package]]
 name = "lexibook-cli"
-version = "0.3.3-alpha.0"
+version = "0.3.3"
 dependencies = [
  "clap-verbosity-flag",
  "csv",
