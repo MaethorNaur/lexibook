@@ -15,17 +15,17 @@ crate-type = [
 ]
 
 [dependencies]
-log = '0.4.8'
+log = '0.4.11'
 lazy_static = '1.4.0'
-simple_logger = '1.4.0'
+simple_logger = '1.11.0'
 pest = '2.1.2'
 
 [dependencies.lexibook]
 path = '../core'
 
 [target.'cfg(target_os = "android")'.dependencies.jni]
-version = '0.14'
+version = '0.17'
 default-features = false
 
 [build-dependencies]
-cbindgen = '0.14.3'
+cbindgen = '0.15.0'
