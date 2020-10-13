@@ -8,24 +8,38 @@ use std::convert::{Into, TryFrom};
 impl SoundSystem {
     pub fn compile(ast: AST<'_>) -> Self {
         let distribution = frequency(&ast.letters);
-        let mut phonemes: HashMap<String, PhonemeCondition> = ast
+        let mut phonemes: HashMap<String, Vec<PhonemeCondition>> = ast
             .letters
             .iter()
             .map(|(letters, _)| {
                 (
                     (*letters).to_string(),
-                    (convert_ipa_letters_to_sounds(letters), Condition::Always),
+                    vec![(convert_ipa_letters_to_sounds(letters), Condition::Always)],
                 )
             })
             .collect();
         ast.phonemes
             .iter()
+            .flat_map(|(letter, list)| list.into_iter().map(move |tuple| (letter, tuple)))
             .for_each(|(letter, (phones, condition))| {
                 let phones = phones
                     .chars()
                     .filter_map(|c| Phone::try_from(c).ok())
                     .collect::<Vec<_>>();
-                phonemes.insert((*letter).to_string(), (phones, condition.clone().into()));
+                let entry = phonemes
+                    .entry((*letter).to_string())
+                    .or_insert_with(Vec::new);
+                let mut new = true;
+                for (_, elem) in entry.iter_mut().enumerate() {
+                    if elem.1 == condition.clone().into() {
+                        *elem = (phones.clone(), elem.1.clone());
+                        new = false;
+                        break;
+                    }
+                }
+                if new {
+                    entry.push((phones, condition.clone().into()));
+                }
             });
 
         let mut classes: HashMap<String, Vec<String>> = HashMap::new();
@@ -34,12 +48,11 @@ impl SoundSystem {
             .iter()
             .filter(|(repr, _)| ast.letters.iter().any(|(letter, _)| letter == repr))
             .collect::<Vec<_>>();
-        sorted_phonemes.sort_unstable_by(|(_, (left_phones, _)), (_, (right_phones, _))| {
-            Ord::cmp(&right_phones[0], &left_phones[0])
-        });
+        sorted_phonemes
+            .sort_unstable_by(|(_, left), (_, right)| Ord::cmp(&right[0].0[0], &left[0].0[0]));
         trace!("Sorted: {:#?}", sorted_phonemes);
-        for (repr, (phones, _)) in &sorted_phonemes {
-            if let Some(phone_classes) = phones.get(0).unwrap().classes() {
+        for (repr, vec) in &sorted_phonemes {
+            if let Some(phone_classes) = vec.get(0).unwrap().0.get(0).unwrap().classes() {
                 for classe in phone_classes {
                     let vec = classes.entry(classe.to_string()).or_insert_with(Vec::new);
                     vec.push((*repr).to_string());

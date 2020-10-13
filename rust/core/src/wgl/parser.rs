@@ -17,7 +17,7 @@ pub struct AST<'a> {
     pub classes: HashMap<&'a str, Vec<&'a str>>,
     pub syllables: Vec<Vec<&'a str>>,
     pub rules: Vec<TransformationRule<'a>>,
-    pub phonemes: HashMap<&'a str, (&'a str, Condition<'a>)>,
+    pub phonemes: HashMap<&'a str, Vec<(&'a str, Condition<'a>)>>,
 }
 
 #[derive(Debug, Clone)]
@@ -103,6 +103,7 @@ impl<'a> fmt::Display for TransformationRule<'a> {
         )
     }
 }
+
 impl<'a> Environment<'a> {
     pub fn to_string(&self) -> &'a str {
         match self {
@@ -139,19 +140,22 @@ pub fn from_string(input: &'_ str) -> Result<AST, Error<Rule>> {
 
 fn build_phonemes(
     pair: pest::iterators::Pair<'_, Rule>,
-) -> HashMap<&'_ str, (&'_ str, Condition<'_>)> {
-    pair.into_inner()
-        .map(|phoneme_pair| {
-            let mut pair = phoneme_pair.into_inner();
-            let letter = pair.next().unwrap().as_str();
-            let notation = pair.next().unwrap().as_str();
-            let condition = pair
-                .next()
-                .map(build_condition)
-                .unwrap_or(Condition::Always);
-            (letter, (notation, condition))
-        })
-        .collect()
+) -> HashMap<&'_ str, Vec<(&'_ str, Condition<'_>)>> {
+    let mut result = HashMap::new();
+    pair.into_inner().for_each(|phoneme_pair| {
+        let mut pair = phoneme_pair.into_inner();
+        let letter = pair.next().unwrap().as_str();
+        let notation = pair.next().unwrap().as_str();
+        let condition = pair
+            .next()
+            .map(build_condition)
+            .unwrap_or(Condition::Always);
+        result
+            .entry(letter)
+            .or_insert_with(Vec::new)
+            .push((notation, condition));
+    });
+    result
 }
 
 fn build_condition_type(pair: pest::iterators::Pair<'_, Rule>) -> ConditionType<'_> {

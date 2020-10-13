@@ -1,11 +1,12 @@
 use crate::sound_system::phone;
 use crate::wgl;
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::convert::Into;
 pub type Syllable = Vec<String>;
 pub type Distribution = (String, f64);
 pub type PhonemeCondition = (phone::Phones, Condition);
-pub type Phoneme = (String, PhonemeCondition);
+pub type Phoneme = (String, Vec<PhonemeCondition>);
 
 #[repr(u8)]
 #[derive(Debug)]
@@ -17,10 +18,11 @@ pub enum MonoSyllableRepartition {
     Rare,
     Never,
 }
+
 #[derive(Default, Debug, Serialize)]
 pub struct SoundSystem {
     classes: HashMap<String, Vec<String>>,
-    phonemes: HashMap<String, PhonemeCondition>,
+    phonemes: HashMap<String, Vec<PhonemeCondition>>,
     phonemes_sorted: Vec<Phoneme>,
     syllables: Vec<Syllable>,
     distribution: Vec<Distribution>,
@@ -59,6 +61,23 @@ pub enum Condition {
     },
 }
 
+impl PartialOrd for Condition {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        let res = match (self, other) {
+            (Condition::Always, Condition::Always) => Ordering::Equal,
+            (Condition::Always, _) => Ordering::Less,
+            (_, Condition::Always) => Ordering::Greater,
+            _ => Ordering::Equal,
+        };
+        Some(res)
+    }
+}
+
+impl Ord for Condition {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap_or(Ordering::Less)
+    }
+}
 impl<'a> Into<Condition> for wgl::Condition<'a> {
     fn into(self) -> Condition {
         match self {
@@ -114,7 +133,7 @@ impl SoundSystem {
 
     pub fn new(
         classes: HashMap<String, Vec<String>>,
-        phonemes: HashMap<String, PhonemeCondition>,
+        phonemes: HashMap<String, Vec<PhonemeCondition>>,
         syllables: Vec<Syllable>,
         distribution: Vec<(String, f64)>,
         rules: Vec<Rule>,
@@ -138,7 +157,7 @@ impl SoundSystem {
         &self.phonemes_sorted
     }
 
-    pub fn phonemes(&mut self) -> &mut HashMap<String, PhonemeCondition> {
+    pub fn phonemes(&mut self) -> &mut HashMap<String, Vec<PhonemeCondition>> {
         &mut self.phonemes
     }
 
@@ -159,7 +178,7 @@ impl SoundSystem {
     }
 }
 
-fn sort_phonemes(current: &HashMap<String, PhonemeCondition>) -> Vec<Phoneme> {
+fn sort_phonemes(current: &HashMap<String, Vec<PhonemeCondition>>) -> Vec<Phoneme> {
     let mut phonemes = current.clone().into_iter().collect::<Vec<_>>();
     phonemes.sort_by(|(a, _), (b, _)| b.len().cmp(&a.len()));
     phonemes

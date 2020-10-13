@@ -31,7 +31,7 @@ impl fmt::Display for SoundSystem {
 impl SoundSystem {
     fn add_phonemes(&mut self, repr: &'_ str, phones: phone::Phones) {
         self.phonemes()
-            .insert(repr.to_string(), (phones, Condition::Always));
+            .insert(repr.to_string(), vec![(phones, Condition::Always)]);
     }
 
     pub fn update_phoneme(&mut self, diffs: &[PhonemeDifference]) {
@@ -50,7 +50,7 @@ impl SoundSystem {
             .phonemes_sorted()
             .clone()
             .into_iter()
-            .flat_map(|(_, (phones, _))| phones)
+            .flat_map(|(_, list)| list.into_iter().flat_map(|(phones, _)| phones))
             .filter(|phone| match phone {
                 phone::Phone::Diacritic(_) => false,
                 _ => true,
@@ -91,19 +91,23 @@ impl SoundSystem {
     fn find_phoneme<'a, 'b>(
         &self,
         input: &'b str,
-        letters_condition: &'a (String, PhonemeCondition),
+        letters_condition: &'a (String, Vec<PhonemeCondition>),
         position: usize,
         length: usize,
     ) -> Option<(&'a String, &'a phone::Phones)> {
-        let (letter, (phones, condition)) = letters_condition;
-        let result = (letter, phones);
-        if input.starts_with(letter)
-            && self.resolve_condition(input, letter, position, length, condition)
-        {
-            Some(result)
-        } else {
-            None
-        }
+        let (letter, list) = letters_condition;
+        let mut vec = list.into_iter().collect::<Vec<_>>();
+        vec.sort_unstable_by(|(_, left), (_, right)| Ord::cmp(&right, &left));
+        vec.into_iter().find_map(|(phones, condition)| {
+            let result = (letter, phones);
+            if input.starts_with(letter)
+                && self.resolve_condition(input, letter, position, length, condition)
+            {
+                Some(result)
+            } else {
+                None
+            }
+        })
     }
 
     fn resolve_condition(

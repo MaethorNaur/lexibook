@@ -30,16 +30,10 @@ class LexibookApp extends StatelessWidget {
             darkTheme: NeumorphicThemeData(
               baseColor: Colors.grey[800],
               accentColor: Colors.green,
-              lightSource: LightSource.bottomRight,
-              depth: 6,
-              intensity: 0.75,
             ),
             theme: NeumorphicThemeData(
               baseColor: Colors.grey[200],
               accentColor: Colors.cyan,
-              lightSource: LightSource.bottomRight,
-              depth: 6,
-              intensity: 0.75,
             ),
             child: HomeScreen()),
       );
