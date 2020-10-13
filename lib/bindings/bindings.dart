@@ -13,13 +13,14 @@ class _Bindings {
   void Function(Pointer<Void>) sound_system_free;
   void Function(Pointer<StringList>) string_list_free;
   Pointer<StringList> Function(Pointer<Void>, int, int) generate_words;
+  int Function(Pointer<Void>, Pointer<Utf8>) save_file;
 
   _Bindings() {
     lexibook = Platform.isAndroid
         ? DynamicLibrary.open("liblexibook_ffi.so")
-        :(Platform.isWindows ?
-          DynamicLibrary.open("lexibook_ffi.dll")
-        : DynamicLibrary.process());
+        : (Platform.isWindows
+            ? DynamicLibrary.open("lexibook_ffi.dll")
+            : DynamicLibrary.process());
 
     init_logger = lexibook
         .lookup<NativeFunction<lexibook_init_logger_t>>('lexibook_init_logger')
@@ -46,7 +47,12 @@ class _Bindings {
         .lookup<NativeFunction<lexibook_generate_words_t>>(
             'lexibook_generate_words')
         .asFunction();
+    save_file = lexibook
+        .lookup<NativeFunction<lexibook_save_file_t>>(
+            'lexibook_sound_system_save_file')
+        .asFunction();
   }
 }
+
 _Bindings _cachedBindings;
 _Bindings get bindings => _cachedBindings ??= _Bindings();

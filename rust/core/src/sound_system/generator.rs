@@ -64,8 +64,8 @@ impl SoundSystem {
         let mut syllable = String::new();
         let index = distribution::power_law(syllables_size, syllable_drop);
         let pattern = &self.syllables()[index];
-
-        for class_name in pattern {
+        for name in pattern {
+            let class_name = name.trim_end_matches('?');
             let distribution = distribution_cache
                 .entry(class_name.to_string())
                 .or_insert_with(|| match self.classes().get(class_name) {
@@ -78,8 +78,11 @@ impl SoundSystem {
                     None => vec![],
                 });
             if !distribution.is_empty() {
-                let letter = distribution::select(distribution);
-                syllable.push_str(letter);
+                let is_random = name.ends_with('?');
+                if !is_random || rand::random() {
+                    let letter = distribution::select(distribution);
+                    syllable.push_str(letter);
+                }
             }
         }
         syllable

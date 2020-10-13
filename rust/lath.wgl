@@ -9,7 +9,7 @@ phonemes:
   c /k/
   h /h/ at the beginning of word 
 
-syllables: CV V RV
+syllables: CVC CV
 
 rules:
 _C: w ->

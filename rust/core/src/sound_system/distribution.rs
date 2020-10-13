@@ -1,5 +1,6 @@
 use super::Distribution;
 use rand::prelude::*;
+
 pub fn power_law(max: usize, percentage: f32) -> usize {
     let mut result = 0;
     while random::<f32>() >= percentage {

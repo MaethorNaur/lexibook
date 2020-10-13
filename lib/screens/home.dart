@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:lexibook/bindings/lexibook.dart';
-import 'widget_input.dart';
+import 'frequency.dart';
+import 'package:lexibook/helpers/display.dart';
+import 'package:optional/optional.dart';
+import 'package:lexibook/file_picker.dart' as FilePicker;
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -10,53 +13,38 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const String _initText = '''import:  std-assimilations ./src/test
-letters: l, h, t, a, b, d, e, o, y, w, ä, ë, ö, m, n, p, t, c, g, x
-
-phonemes:
-  th /θ/ 
-  ä /ja/ 
-  ë /je/
-  ö /jo/
-  c /k/
-  h /h/ at the beginning of word 
-
-syllables: CV V RV
-
-rules:
-_C: w ->
-C_#: w ->
-Vn ~> Ṽ
-aa ~> aː
-ee ~> eː
-V_V: S -> Z
-''';
   List<String> _words = [];
   double _numbers = 10;
   SoundSystem _soundSystem;
+  MonoSyllableRepartition _frequency = MonoSyllableRepartition.LessFrequent;
+  String _filename = "";
+  final ScrollController _scrollController = ScrollController();
 
-  void _parseString(String text) {
-    if (_soundSystem != null) {
-      _soundSystem.close();
-    }
-    try {
-      _soundSystem = SoundSystem.parseString(text);
-    } catch (e) {
-      print("Error: $e");
-    }
+  void _parseFile(String file) {
+    setState(() {
+      if (_soundSystem != null) {
+        _soundSystem.close();
+      }
+      try {
+        _soundSystem = SoundSystem.parseFile(file);
+        _filename = file;
+        _words = [];
+      } catch (e) {
+        print("Error: $e");
+      }
+    });
   }
 
   void _generateWords() {
     setState(() {
-      _words = _soundSystem.generateWords(
-          _numbers.toInt(), MonoSyllableRepartition.LessFrequent);
+      _words = _soundSystem.generateWords(_numbers.toInt(), _frequency);
     });
   }
 
   @override
-  void initState() {
-    super.initState();
-    _parseString(_initText);
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -70,97 +58,162 @@ V_V: S -> Z
     ));
     return Scaffold(
       backgroundColor: NeumorphicTheme.baseColor(context),
+      appBar: NeumorphicAppBar(
+        title: Text("Lexibook"),
+      ),
+      endDrawer: Drawer(
+        child: Container(
+          color: NeumorphicTheme.baseColor(context),
+          child: Column(
+            children: [
+              ConstrainedBox(
+                constraints: BoxConstraints.tightFor(
+                    height: NeumorphicAppBar.toolbarHeight),
+                child: NeumorphicAppBar(
+                  title: Text('Menu'),
+                  leading: NeumorphicCloseButton(),
+                  actions: <Widget>[
+                    NeumorphicButton(
+                      child: Icon(Icons.style),
+                      onPressed: () {},
+                    ),
+                    NeumorphicBackButton(forward: true),
+                  ],
+                ),
+              ),
+              Spacer(),
+            ],
+          ),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-            NeumorphicButton(
-                margin: EdgeInsets.only(top: 12),
-                onClick: () {
-                  NeumorphicTheme.of(context).usedTheme =
-                      NeumorphicTheme.isUsingDark(context)
-                          ? UsedTheme.LIGHT
-                          : UsedTheme.DARK;
-                },
-                style: NeumorphicStyle(shape: NeumorphicShape.flat),
-                boxShape:
-                    NeumorphicBoxShape.roundRect(BorderRadius.circular(8)),
-                padding: const EdgeInsets.all(12.0),
-                child: Text(
-                  "Toggle Theme",
-                  style: TextStyle(color: _textColor(context)),
-                )),
-            WidgetInputScreen(wglCallback: _parseString, initText: _initText),
-            Row(
-              mainAxisSize: MainAxisSize.max,
+            Wrap(
+              spacing: 24.0,
+              runSpacing: 24.0,
               children: <Widget>[
-                Text(
-                  "Words: ",
-                  style: TextStyle(color: _textColor(context)),
+                NeumorphicButton(
+                  margin: EdgeInsets.only(top: 12),
+                  onPressed: () {
+                    NeumorphicTheme.of(context).themeMode =
+                        NeumorphicTheme.isUsingDark(context)
+                            ? ThemeMode.light
+                            : ThemeMode.dark;
+                  },
+                  style: Display.flatRounded(),
+                  padding: const EdgeInsets.all(12.0),
+                  child: Text(
+                    "Toggle Theme",
+                    style: Display.mainText(context),
+                  ),
                 ),
-                Flexible(
-                  child: NeumorphicSlider(
-                    min: 10,
-                    max: 100,
-                    value: _numbers,
-                    onChanged: (value) {
-                      setState(() {
-                        _numbers = value;
-                      });
-                    },
+                NeumorphicButton(
+                  margin: EdgeInsets.only(top: 12),
+                  onPressed: () async {
+                    Optional<String> maybePath =
+                        await FilePicker.openFilePath('wgl');
+                    maybePath.ifPresent((path) => _parseFile(path));
+                  },
+                  style: Display.flatRounded(),
+                  padding: const EdgeInsets.all(12.0),
+                  child: Text(
+                    "Load file",
+                    style: Display.mainText(context),
+                  ),
+                ),
+                NeumorphicButton(
+                  margin: EdgeInsets.only(top: 12),
+                  onPressed: _soundSystem != null
+                      ? () async {
+                          Optional<String> maybePath =
+                              await FilePicker.saveFilePath('wgl');
+                          maybePath
+                              .ifPresent((path) => _soundSystem.save(path));
+                        }
+                      : null,
+                  style: Display.flatRounded(),
+                  padding: const EdgeInsets.all(12.0),
+                  child: Text(
+                    "Save file",
+                    style: Display.mainText(context),
                   ),
                 ),
                 Text(
-                  "${_numbers.toInt()}",
-                  style: TextStyle(color: _textColor(context)),
+                  "$_filename",
+                  style: Display.mainText(context),
                 ),
               ],
             ),
+            Padding(
+              padding: EdgeInsets.all(10),
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                children: <Widget>[
+                  Text(
+                    "Words: ",
+                    style: Display.mainText(context),
+                  ),
+                  Flexible(
+                    child: NeumorphicSlider(
+                      min: 10,
+                      max: 100,
+                      value: _numbers,
+                      onChanged: (value) {
+                        setState(() {
+                          _numbers = value;
+                        });
+                      },
+                    ),
+                  ),
+                  Text(
+                    "${_numbers.toInt()}",
+                    style: Display.mainText(context),
+                  ),
+                ],
+              ),
+            ),
+            FrequencyWidget(
+              defaultValue: _frequency,
+              callback: (value) => setState(() => _frequency = value),
+            ),
             Expanded(
-              child: ListView.builder(
-                  padding: const EdgeInsets.all(8),
-                  itemCount: _words.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return Neumorphic(
-                      boxShape: NeumorphicBoxShape.roundRect(
-                          BorderRadius.circular(12)),
-                      style: NeumorphicStyle(
-                        shape: NeumorphicShape.flat,
-                      ),
-                      margin: EdgeInsets.all(16).copyWith(top: 8),
-                      padding: EdgeInsets.all(16),
-                      child: Center(
-                        child: Text(
-                          _words[index],
-                          style: TextStyle(color: _textColor(context)),
+              child: Scrollbar(
+                isAlwaysShown: true,
+                controller: _scrollController,
+                child: ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(8),
+                    itemCount: _words.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return Neumorphic(
+                        style: Display.flatRounded(),
+                        margin: EdgeInsets.all(16).copyWith(top: 8),
+                        padding: EdgeInsets.all(16),
+                        child: Center(
+                          child: Text(
+                            _words[index],
+                            style: Display.mainText(context),
+                          ),
                         ),
-                      ),
-                    );
-                  }),
+                      );
+                    }),
+              ),
             ),
           ],
         ),
       ),
       floatingActionButton: NeumorphicButton(
-        onClick: _generateWords,
-        boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12)),
-        style: NeumorphicStyle(
-          shape: NeumorphicShape.flat,
-        ),
-        child: Icon(
+        onPressed: _soundSystem != null ? _generateWords : null,
+        style: Display.flatRounded(),
+        child: NeumorphicIcon(
           Icons.keyboard_return,
-          color: _iconsColor(context),
+          style: NeumorphicStyle(
+              color: NeumorphicTheme.of(context).current.accentColor),
         ),
       ),
     );
   }
-
-  Color _iconsColor(BuildContext context) {
-    final theme = NeumorphicTheme.of(context);
-    return theme.isUsingDark ? theme.current.accentColor : null;
-  }
-
-  Color _textColor(BuildContext context) =>
-      NeumorphicTheme.isUsingDark(context) ? Colors.white : Colors.black;
 }

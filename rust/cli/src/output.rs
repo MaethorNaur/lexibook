@@ -61,11 +61,9 @@ pub fn csv(table: &Table, filename: &str) -> Result<()> {
 
 pub fn create_phonology_tables(sound_system: SoundSystem) -> (Table, Table) {
     let phonology = sound_system.phonology();
-    let (consonants, vowels): (Vec<phone::Phone>, Vec<phone::Phone>) =
-        phonology.iter().partition(|phone| match phone {
-            phone::Phone::Consonant(_) => true,
-            _ => false,
-        });
+    let (consonants, vowels): (Vec<phone::Phone>, Vec<phone::Phone>) = phonology
+        .iter()
+        .partition(|phone| matches!(phone, phone::Phone::Consonant(_)));
 
     (consonants_table(consonants), vowels_table(vowels))
 }
@@ -90,11 +88,11 @@ fn consonants_table(consonants: Vec<phone::Phone>) -> Table {
     table.add_row(Row::new(vec![
         Cell::new(""),
         Cell::new_align("Bilabial", Alignment::CENTER).with_style(Attr::Bold),
-        Cell::new_align("Labio­dental", Alignment::CENTER).with_style(Attr::Bold),
+        Cell::new_align("Labio\u{AD}dental", Alignment::CENTER).with_style(Attr::Bold),
         Cell::new_align("Dental", Alignment::CENTER).with_style(Attr::Bold),
         Cell::new_align("Alveolar", Alignment::CENTER).with_style(Attr::Bold),
-        Cell::new_align("Post­alveolar", Alignment::CENTER).with_style(Attr::Bold),
-        Cell::new_align("Retro­flex", Alignment::CENTER).with_style(Attr::Bold),
+        Cell::new_align("Post-alveolar", Alignment::CENTER).with_style(Attr::Bold),
+        Cell::new_align("Retro\u{AD}flex", Alignment::CENTER).with_style(Attr::Bold),
         Cell::new_align("Palatal", Alignment::CENTER).with_style(Attr::Bold),
         Cell::new_align("Velar", Alignment::CENTER).with_style(Attr::Bold),
         Cell::new_align("Uvular", Alignment::CENTER).with_style(Attr::Bold),

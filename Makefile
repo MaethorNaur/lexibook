@@ -16,7 +16,7 @@ ios: rust/target/universal/release/liblexibook_ffi.a
 rust/target/universal/release/liblexibook_ffi.a: $(SOURCES)
 	@if [ $$(uname) == "Darwin" ] ; then \
 		cd rust/ffi; \
-		cargo lipo --release
+		cargo lipo --release; \
 	else echo "Skipping iOS compilation on $$(uname)" ; \
 	fi
 
