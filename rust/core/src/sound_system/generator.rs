@@ -79,7 +79,7 @@ impl SoundSystem {
                 });
             if !distribution.is_empty() {
                 let is_random = name.ends_with('?');
-                if !is_random || (is_random && rand::random()) {
+                if !is_random || rand::random() {
                     let letter = distribution::select(distribution);
                     syllable.push_str(letter);
                 }

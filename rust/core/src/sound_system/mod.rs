@@ -51,10 +51,7 @@ impl SoundSystem {
             .clone()
             .into_iter()
             .flat_map(|(_, list)| list.into_iter().flat_map(|(phones, _)| phones))
-            .filter(|phone| match phone {
-                phone::Phone::Diacritic(_) => false,
-                _ => true,
-            })
+            .filter(|phone| !matches!(phone, phone::Phone::Diacritic(_)))
             .collect();
         vec.sort_unstable_by(|left_phones, right_phones| Ord::cmp(&right_phones, &left_phones));
 
@@ -96,7 +93,7 @@ impl SoundSystem {
         length: usize,
     ) -> Option<(&'a String, &'a phone::Phones)> {
         let (letter, list) = letters_condition;
-        let mut vec = list.into_iter().collect::<Vec<_>>();
+        let mut vec = list.iter().collect::<Vec<_>>();
         vec.sort_unstable_by(|(_, left), (_, right)| Ord::cmp(&right, &left));
         vec.into_iter().find_map(|(phones, condition)| {
             let result = (letter, phones);

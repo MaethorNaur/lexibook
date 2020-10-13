@@ -20,7 +20,7 @@ impl SoundSystem {
             .collect();
         ast.phonemes
             .iter()
-            .flat_map(|(letter, list)| list.into_iter().map(move |tuple| (letter, tuple)))
+            .flat_map(|(letter, list)| list.iter().map(move |tuple| (letter, tuple)))
             .for_each(|(letter, (phones, condition))| {
                 let phones = phones
                     .chars()

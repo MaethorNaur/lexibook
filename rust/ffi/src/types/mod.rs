@@ -1,5 +1,5 @@
 use lexibook::sound_system;
-use log::Level;
+use log::LevelFilter;
 use std::convert::Into;
 mod lists;
 pub use lists::*;
@@ -41,13 +41,13 @@ pub enum LogLevel {
 }
 
 impl LogLevel {
-    pub fn to_level(self) -> Level {
+    pub fn to_level(self) -> LevelFilter {
         match self {
-            LogLevel::Trace => Level::Trace,
-            LogLevel::Debug => Level::Debug,
-            LogLevel::Info => Level::Info,
-            LogLevel::Warn => Level::Warn,
-            LogLevel::Error => Level::Error,
+            LogLevel::Trace => LevelFilter::Trace,
+            LogLevel::Debug => LevelFilter::Debug,
+            LogLevel::Info => LevelFilter::Info,
+            LogLevel::Warn => LevelFilter::Warn,
+            LogLevel::Error => LevelFilter::Error,
         }
     }
 }

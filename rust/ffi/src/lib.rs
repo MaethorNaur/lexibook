@@ -17,7 +17,10 @@ use types::*;
 /// Initialise the logger
 #[no_mangle]
 pub extern "C" fn lexibook_init_logger(level: LogLevel) {
-    simple_logger::init_with_level(level.to_level()).unwrap();
+    simple_logger::SimpleLogger::new()
+        .with_level(level.to_level())
+        .init()
+        .unwrap();
 }
 
 /// Free sound system memory
