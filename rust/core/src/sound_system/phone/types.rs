@@ -1,20 +1,20 @@
 pub type Phones = Vec<Phone>;
 use std::fmt;
-#[derive(Debug, Eq, PartialEq, Serialize, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Copy)]
 pub enum Phone {
     Consonant(Consonant),
     Vowel(Vowel),
     Diacritic(PhoneProperty),
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Copy)]
 pub struct Vowel {
     pub height: Height,
     pub backness: Backness,
     pub roundness: Roundness,
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Clone, Ord, PartialOrd, Copy)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Ord, PartialOrd, Copy)]
 #[repr(u8)]
 pub enum Height {
     Close,
@@ -26,7 +26,7 @@ pub enum Height {
     Open,
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Clone, Ord, PartialOrd, Copy)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Ord, PartialOrd, Copy)]
 #[repr(u8)]
 pub enum Backness {
     Front,
@@ -34,7 +34,7 @@ pub enum Backness {
     Back,
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Clone, Ord, PartialOrd, Copy)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Ord, PartialOrd, Copy)]
 #[repr(u8)]
 pub enum Roundness {
     UnRounded,
@@ -42,14 +42,14 @@ pub enum Roundness {
     Undefined,
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Copy)]
 pub struct Consonant {
     pub place: ConsonantPlace,
     pub manner: ConsonantManner,
     pub phonation: Phonation,
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Clone, Ord, PartialOrd, Copy)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Ord, PartialOrd, Copy)]
 #[repr(u8)]
 pub enum ConsonantPlace {
     Bilabial,
@@ -66,7 +66,7 @@ pub enum ConsonantPlace {
     Glottal,
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Clone, Ord, PartialOrd, Copy)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Ord, PartialOrd, Copy)]
 #[repr(u8)]
 pub enum ConsonantManner {
     Nasal,
@@ -115,7 +115,7 @@ impl fmt::Display for Height {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Clone, Ord, PartialOrd, Copy)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Ord, PartialOrd, Copy)]
 #[repr(C)]
 pub enum PhoneProperty {
     ConsonantRelease(ConsonantRelease),
@@ -127,7 +127,7 @@ pub enum PhoneProperty {
     Intonation(Intonation),
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Clone, Ord, PartialOrd, Copy)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Ord, PartialOrd, Copy)]
 #[repr(u8)]
 pub enum ConsonantRelease {
     Aspirated,
@@ -139,7 +139,7 @@ pub enum ConsonantRelease {
     MidCentralVowel,
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Clone, Ord, PartialOrd, Copy)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Ord, PartialOrd, Copy)]
 #[repr(u8)]
 pub enum Phonation {
     Voiceless,
@@ -148,7 +148,7 @@ pub enum Phonation {
     CreakyVoiced,
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Clone, Ord, PartialOrd, Copy)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Ord, PartialOrd, Copy)]
 #[repr(u8)]
 pub enum Articulation {
     Dental,
@@ -163,7 +163,7 @@ pub enum Articulation {
     MidCentralized,
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Clone, Ord, PartialOrd, Copy)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Ord, PartialOrd, Copy)]
 #[repr(u8)]
 pub enum CoArticulation {
     MoreRounded,
@@ -179,7 +179,7 @@ pub enum CoArticulation {
     Rhoticity,
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Clone, Ord, PartialOrd, Copy)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Ord, PartialOrd, Copy)]
 #[repr(u8)]
 pub enum Rhythm {
     PrimaryStress,
@@ -189,7 +189,7 @@ pub enum Rhythm {
     ExtraShort,
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Clone, Ord, PartialOrd, Copy)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Ord, PartialOrd, Copy)]
 #[repr(u8)]
 pub enum Intonation {
     MinorBreak,
@@ -198,7 +198,7 @@ pub enum Intonation {
     GlobalFall,
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Clone, Ord, PartialOrd, Copy)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Ord, PartialOrd, Copy)]
 #[repr(u8)]
 pub enum Tone {
     Top,

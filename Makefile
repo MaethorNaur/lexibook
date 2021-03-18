@@ -4,6 +4,8 @@ all: ios android macos
 
 macos: rust/target/release/liblexibook_ffi.a
 
+debug-macos: rust/target/debug/liblexibook_ffi.a
+
 rust/target/release/liblexibook_ffi.a: $(SOURCES)
 	@if [ $$(uname) == "Darwin" ] ; then \
 		cd rust/ffi; \
@@ -11,7 +13,15 @@ rust/target/release/liblexibook_ffi.a: $(SOURCES)
 	else echo "Skipping iOS compilation on $$(uname)" ; \
 	fi
 
+rust/target/debug/liblexibook_ffi.a: $(SOURCES)
+	@if [ $$(uname) == "Darwin" ] ; then \
+		cd rust/ffi; \
+		cargo build; \
+	else echo "Skipping iOS compilation on $$(uname)" ; \
+	fi
+
 ios: rust/target/universal/release/liblexibook_ffi.a
+ios-debug: rust/target/universal/debug/liblexibook_ffi.a
 
 rust/target/universal/release/liblexibook_ffi.a: $(SOURCES)
 	@if [ $$(uname) == "Darwin" ] ; then \
@@ -20,7 +30,16 @@ rust/target/universal/release/liblexibook_ffi.a: $(SOURCES)
 	else echo "Skipping iOS compilation on $$(uname)" ; \
 	fi
 
+rust/target/universal/debug/liblexibook_ffi.a: $(SOURCES)
+	@if [ $$(uname) == "Darwin" ] ; then \
+		cd rust/ffi; \
+		cargo lipo; \
+	else echo "Skipping iOS compilation on $$(uname)" ; \
+	fi
+
 android: rust/target/aarch64-linux-android/release/liblexibook_ffi.so rust/target/armv7-linux-androidabi/release/liblexibook_ffi.so rust/target/i686-linux-android/release/liblexibook_ffi.so
+
+android-debug: rust/target/aarch64-linux-android/debug/liblexibook_ffi.so rust/target/armv7-linux-androidabi/debug/liblexibook_ffi.so rust/target/i686-linux-android/debug/liblexibook_ffi.so
 
 rust/target/aarch64-linux-android/release/liblexibook_ffi.so: $(SOURCES) 
 	cd rust/ffi; \
@@ -34,3 +53,16 @@ rust/target/armv7-linux-androidabi/release/liblexibook_ffi.so: $(SOURCES)
 rust/target/i686-linux-android/release/liblexibook_ffi.so: $(SOURCES) 
 	cd rust/ffi; \
 	cargo build --target i686-linux-android --release
+
+rust/target/aarch64-linux-android/debug/liblexibook_ffi.so: $(SOURCES) 
+	cd rust/ffi; \
+	cargo build --target aarch64-linux-android
+
+rust/target/armv7-linux-androidabi/debug/liblexibook_ffi.so: $(SOURCES) 
+	cd rust/ffi; \
+	cargo build --target armv7-linux-androideabi
+
+
+rust/target/i686-linux-android/debug/liblexibook_ffi.so: $(SOURCES) 
+	cd rust/ffi; \
+	cargo build --target i686-linux-android

@@ -1,4 +1,3 @@
-import:  std-assimilations ./src/test
 letters: l, h, t, a, b, d, e, o, y, w, ä, ë, ö, m, n, p, t, c, g, x
 
 phonemes:

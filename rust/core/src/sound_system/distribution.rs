@@ -1,4 +1,5 @@
 use super::Distribution;
+use crate::wgl::Letter;
 use rand::prelude::*;
 
 pub fn power_law(max: usize, percentage: f32) -> usize {
@@ -13,16 +14,16 @@ fn gusein_zade(position: usize, size: usize) -> f64 {
     (((size + 1) as f64).log10() - ((position + 1) as f64).log10()) / (size as f64) * 100.0
 }
 
-pub fn frequency(letters: &[(&'_ str, f64)]) -> Vec<(String, f64)> {
+pub fn frequency(letters: &[Letter]) -> Vec<(String, f64)> {
     let is_equal = letters
         .first()
-        .map(|(_, first)| {
+        .map(|first| {
             letters
                 .iter()
-                .fold((true, first), |(is_same, previous), (_, weight)| {
+                .fold((true, first.frequency), |(is_same, previous), current| {
                     (
-                        is_same && (*weight - *previous).abs() < std::f64::EPSILON,
-                        weight,
+                        is_same && (current.frequency - previous).abs() < std::f64::EPSILON,
+                        current.frequency,
                     )
                 })
                 .0
@@ -33,15 +34,15 @@ pub fn frequency(letters: &[(&'_ str, f64)]) -> Vec<(String, f64)> {
         letters
             .iter()
             .enumerate()
-            .map(|(i, (letter, _))| {
+            .map(|(i, c)| {
                 let frequency = gusein_zade(i, size);
-                ((*letter).to_string(), frequency)
+                (c.letter.clone(), frequency)
             })
             .collect()
     } else {
         letters
             .iter()
-            .map(|(letter, weight)| ((*letter).to_string(), *weight))
+            .map(|c| (c.letter.clone(), c.frequency))
             .collect()
     }
 }

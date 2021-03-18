@@ -1,86 +1,106 @@
+use pest::error::Error;
+use pest::Parser;
 use std::collections::HashMap;
 use std::fmt;
 
-use pest::error::Error;
-use pest::Parser;
-
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Parser)]
 #[grammar = "wgl.pest"]
 struct WGLParser;
 
-pub type Letter<'a> = (&'a str, f64);
-
-#[derive(Debug, Default)]
-pub struct AST<'a> {
-    pub imports: Vec<&'a str>,
-    pub letters: Vec<Letter<'a>>,
-    pub classes: HashMap<&'a str, Vec<&'a str>>,
-    pub syllables: Vec<Vec<&'a str>>,
-    pub rules: Vec<TransformationRule<'a>>,
-    pub phonemes: HashMap<&'a str, Vec<(&'a str, Condition<'a>)>>,
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+pub struct Ast {
+    pub imports: Vec<String>,
+    pub letters: Vec<Letter>,
+    pub classes: HashMap<String, Vec<String>>,
+    pub syllables: Vec<Vec<String>>,
+    pub rules: Vec<TransformationRule>,
+    pub phonemes: HashMap<String, Vec<Phoneme>>,
 }
 
-#[derive(Debug, Clone)]
-pub enum Condition<'a> {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Letter {
+    pub letter: String,
+    pub frequency: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Phoneme {
+    pub notation: String,
+    pub condition: Condition,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Condition {
     Always,
-    Not(ConditionType<'a>),
-    And(Box<Condition<'a>>, Box<Condition<'a>>),
-    Or(Box<Condition<'a>>, Box<Condition<'a>>),
-    Single(ConditionType<'a>),
+    Not(ConditionType),
+    And(Box<Condition>, Box<Condition>),
+    Or(Box<Condition>, Box<Condition>),
+    Single(ConditionType),
 }
 
-#[derive(Debug, Clone)]
-pub enum ConditionType<'a> {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ConditionType {
     None,
     BeginningWord,
     EndWord,
-    FollowedBy(&'a str),
-    Between(&'a str, &'a str),
+    FollowedBy(String),
+    Between(String, String),
 }
 
-#[derive(Debug)]
-pub enum TransformationRule<'a> {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum TransformationRule {
     SoundRule {
-        environment: Environment<'a>,
-        input: &'a str,
-        output: Option<&'a str>,
+        environment: Environment,
+        input: String,
+        output: Option<String>,
     },
     PhonemeRule {
-        input: &'a str,
-        output: Option<&'a str>,
+        input: String,
+        output: Option<String>,
     },
 }
 
-#[derive(Debug)]
-pub enum Environment<'a> {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum Environment {
     All,
-    Match(&'a str),
+    Match(String),
 }
 
-impl<'a> TransformationRule<'a> {
-    pub fn environment(&self) -> Option<&Environment<'a>> {
+impl Ast {
+    pub fn to_json(&self) -> Result<String, serde_json::Error> {
+        serde_json::to_string(&self)
+    }
+}
+
+pub fn from_json(input: &'_ str) -> Result<Ast, serde_json::Error> {
+    serde_json::from_str(input)
+}
+
+impl TransformationRule {
+    pub fn environment(&self) -> Option<&Environment> {
         match self {
             TransformationRule::SoundRule { environment, .. } => Some(&environment),
             TransformationRule::PhonemeRule { .. } => None,
         }
     }
 
-    pub fn input(&self) -> &'a str {
+    pub fn input(&self) -> String {
         match self {
-            TransformationRule::SoundRule { input, .. } => input,
-            TransformationRule::PhonemeRule { input, .. } => input,
+            TransformationRule::SoundRule { input, .. } => input.to_string(),
+            TransformationRule::PhonemeRule { input, .. } => input.to_string(),
         }
     }
 
-    pub fn output(&self) -> Option<&'a str> {
+    pub fn output(&self) -> Option<String> {
         match self {
-            TransformationRule::SoundRule { output, .. } => *output,
-            TransformationRule::PhonemeRule { output, .. } => *output,
+            TransformationRule::SoundRule { output, .. } => output.clone(),
+            TransformationRule::PhonemeRule { output, .. } => output.clone(),
         }
     }
 }
 
-impl<'a> fmt::Display for TransformationRule<'a> {
+impl fmt::Display for TransformationRule {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mode = match self {
             TransformationRule::SoundRule { .. } => "->",
@@ -99,24 +119,24 @@ impl<'a> fmt::Display for TransformationRule<'a> {
                 .unwrap_or_else(|| "".to_string()),
             self.input(),
             mode,
-            self.output().unwrap_or("")
+            self.output().unwrap_or_else(|| "".to_string())
         )
     }
 }
 
-impl<'a> Environment<'a> {
-    pub fn to_string(&self) -> &'a str {
+impl Environment {
+    pub fn to_string(&self) -> String {
         match self {
-            Environment::All => "_",
-            Environment::Match(s) => s,
+            Environment::All => "_".to_string(),
+            Environment::Match(s) => s.to_string(),
         }
     }
 }
 
-pub fn from_string(input: &'_ str) -> Result<AST, Error<Rule>> {
+pub fn from_string(input: &'_ str) -> Result<Ast, Error<Rule>> {
     let pairs = WGLParser::parse(Rule::wgl, &input)?;
-    trace!("WGL parsed AST: {:#?}", pairs);
-    let mut ast: AST = Default::default();
+    trace!("WGL parsed Ast: {:#?}", pairs);
+    let mut ast: Ast = Default::default();
     for pair in pairs {
         let rule = pair.as_rule();
         match rule {
@@ -132,49 +152,49 @@ pub fn from_string(input: &'_ str) -> Result<AST, Error<Rule>> {
             _ => {}
         }
     }
-
-    trace!("AST: {:#?}", ast);
+    trace!("ast: {:#?}", ast);
 
     Ok(ast)
 }
 
-fn build_phonemes(
-    pair: pest::iterators::Pair<'_, Rule>,
-) -> HashMap<&'_ str, Vec<(&'_ str, Condition<'_>)>> {
+fn build_phonemes(pair: pest::iterators::Pair<'_, Rule>) -> HashMap<String, Vec<Phoneme>> {
     let mut result = HashMap::new();
     pair.into_inner().for_each(|phoneme_pair| {
         let mut pair = phoneme_pair.into_inner();
-        let letter = pair.next().unwrap().as_str();
-        let notation = pair.next().unwrap().as_str();
+        let letter = pair.next().unwrap().as_str().to_string();
+        let notation = pair.next().unwrap().as_str().to_string();
         let condition = pair
             .next()
             .map(build_condition)
             .unwrap_or(Condition::Always);
-        result
-            .entry(letter)
-            .or_insert_with(Vec::new)
-            .push((notation, condition));
+        result.entry(letter).or_insert_with(Vec::new).push(Phoneme {
+            notation,
+            condition,
+        });
     });
     result
 }
 
-fn build_condition_type(pair: pest::iterators::Pair<'_, Rule>) -> ConditionType<'_> {
+fn build_condition_type(pair: pest::iterators::Pair<'_, Rule>) -> ConditionType {
     let inner = pair.into_inner().next().unwrap();
     match inner.as_rule() {
         Rule::beginning_word => ConditionType::BeginningWord,
         Rule::end_word => ConditionType::EndWord,
         Rule::between => {
             let mut rule = inner.into_inner();
-            ConditionType::Between(rule.next().unwrap().as_str(), rule.next().unwrap().as_str())
+            ConditionType::Between(
+                rule.next().unwrap().as_str().to_string(),
+                rule.next().unwrap().as_str().to_string(),
+            )
         }
         _ => {
             let rule = inner.into_inner().next().unwrap();
-            ConditionType::FollowedBy(rule.as_str())
+            ConditionType::FollowedBy(rule.as_str().to_string())
         }
     }
 }
 
-fn build_condition(pair: pest::iterators::Pair<'_, Rule>) -> Condition<'_> {
+fn build_condition(pair: pest::iterators::Pair<'_, Rule>) -> Condition {
     pair.into_inner()
         .fold(Condition::Always, |condition, inner| {
             let rule = inner.as_rule();
@@ -202,27 +222,27 @@ fn build_condition(pair: pest::iterators::Pair<'_, Rule>) -> Condition<'_> {
         })
 }
 
-fn build_imports(pair: pest::iterators::Pair<'_, Rule>) -> Vec<&'_ str> {
-    pair.into_inner().map(|r| r.as_str()).collect()
+fn build_imports(pair: pest::iterators::Pair<'_, Rule>) -> Vec<String> {
+    pair.into_inner().map(|r| r.as_str().to_string()).collect()
 }
 
 #[allow(irrefutable_let_patterns)]
-fn build_letters(pair: pest::iterators::Pair<'_, Rule>) -> Vec<Letter<'_>> {
+fn build_letters(pair: pest::iterators::Pair<'_, Rule>) -> Vec<Letter> {
     pair.into_inner()
         .map(|pair| {
             let mut inner = pair.into_inner();
-            (
-                inner.next().unwrap().as_str(),
-                inner
+            Letter {
+                letter: inner.next().unwrap().as_str().to_string(),
+                frequency: inner
                     .next()
                     .and_then(|p| p.as_str().parse::<f64>().ok())
                     .unwrap_or(0.0),
-            )
+            }
         })
         .collect()
 }
 
-fn build_rules(pair: pest::iterators::Pair<'_, Rule>) -> Vec<TransformationRule<'_>> {
+fn build_rules(pair: pest::iterators::Pair<'_, Rule>) -> Vec<TransformationRule> {
     pair.into_inner()
         .filter_map(build_sound_or_phoneme_rule)
         .collect()
@@ -230,7 +250,7 @@ fn build_rules(pair: pest::iterators::Pair<'_, Rule>) -> Vec<TransformationRule<
 
 fn build_sound_or_phoneme_rule(
     pair: pest::iterators::Pair<'_, Rule>,
-) -> Option<TransformationRule<'_>> {
+) -> Option<TransformationRule> {
     let rule = pair.into_inner().next().unwrap();
     match rule.as_rule() {
         Rule::sound_rule => Some(build_sound_rule(rule)),
@@ -242,7 +262,7 @@ fn build_sound_or_phoneme_rule(
 fn build_phoneme_rule(pair: pest::iterators::Pair<'_, Rule>) -> TransformationRule {
     let mut pairs = pair.into_inner();
     let input = pairs.next().map(build_input_output).unwrap();
-    let sounds = pairs.as_str();
+    let sounds = pairs.as_str().to_string();
     let output = if sounds.is_empty() {
         None
     } else {
@@ -252,7 +272,7 @@ fn build_phoneme_rule(pair: pest::iterators::Pair<'_, Rule>) -> TransformationRu
     TransformationRule::PhonemeRule { input, output }
 }
 
-fn build_sound_rule(pair: pest::iterators::Pair<'_, Rule>) -> TransformationRule<'_> {
+fn build_sound_rule(pair: pest::iterators::Pair<'_, Rule>) -> TransformationRule {
     let mut pairs = pair.into_inner();
     let environment = pairs.next().map(build_environment).unwrap();
     let input = pairs.next().map(build_input_output).unwrap();
@@ -264,28 +284,28 @@ fn build_sound_rule(pair: pest::iterators::Pair<'_, Rule>) -> TransformationRule
     }
 }
 
-fn build_environment(pair: pest::iterators::Pair<'_, Rule>) -> Environment<'_> {
+fn build_environment(pair: pest::iterators::Pair<'_, Rule>) -> Environment {
     match pair.as_str() {
         "_" => Environment::All,
-        match_rule => Environment::Match(match_rule),
+        match_rule => Environment::Match(match_rule.to_string()),
     }
 }
 
-fn build_input_output(pair: pest::iterators::Pair<'_, Rule>) -> &'_ str {
-    pair.as_str()
+fn build_input_output(pair: pest::iterators::Pair<'_, Rule>) -> String {
+    pair.as_str().to_string()
 }
 
-fn build_syllables(pair: pest::iterators::Pair<'_, Rule>) -> Vec<Vec<&'_ str>> {
+fn build_syllables(pair: pest::iterators::Pair<'_, Rule>) -> Vec<Vec<String>> {
     pair.into_inner().map(build_words).collect()
 }
 
-fn build_words(pair: pest::iterators::Pair<'_, Rule>) -> Vec<&'_ str> {
-    pair.into_inner().map(|p| p.as_str()).collect()
+fn build_words(pair: pest::iterators::Pair<'_, Rule>) -> Vec<String> {
+    pair.into_inner().map(|p| p.as_str().to_string()).collect()
 }
 
-fn build_class(pair: pest::iterators::Pair<'_, Rule>) -> (&'_ str, Vec<&'_ str>) {
+fn build_class(pair: pest::iterators::Pair<'_, Rule>) -> (String, Vec<String>) {
     let mut pairs = pair.into_inner();
-    let class_name = pairs.next().unwrap().as_str();
-    let letters: Vec<_> = pairs.map(|p| p.as_str()).collect();
+    let class_name = pairs.next().unwrap().as_str().to_string();
+    let letters: Vec<_> = pairs.map(|p| p.as_str().to_string()).collect();
     (class_name, letters)
 }

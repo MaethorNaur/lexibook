@@ -2,6 +2,7 @@ use crate::errors;
 use crate::errors::Error;
 use lexibook::sound_system;
 use lexibook::sound_system::SoundSystem;
+use lexibook::Glossary;
 use std::ffi::CStr;
 use std::fs;
 use std::fs::File;
@@ -23,6 +24,64 @@ pub extern "C" fn lexibook_parse_string(input_c_char: *const c_char) -> *mut c_v
             errors::update_last_error(e);
             ptr::null_mut()
         }
+    }
+}
+
+/// Load a sound system from AST
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+#[no_mangle]
+pub extern "C" fn lexibook_from_json(input_c_char: *const c_char) -> *mut c_void {
+    let input = unsafe {
+        assert!(!input_c_char.is_null());
+        CStr::from_ptr(input_c_char).to_str().unwrap()
+    };
+    match sound_system::from_json(input) {
+        Ok(sound_system) => Box::into_raw(Box::new(sound_system)) as *mut c_void,
+        Err(e) => {
+            errors::update_last_error(e);
+            ptr::null_mut()
+        }
+    }
+}
+
+/// Load a glossary
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+#[no_mangle]
+pub extern "C" fn lexibook_open_glossary(input_c_char: *const c_char) -> *mut c_void {
+    let input = unsafe {
+        assert!(!input_c_char.is_null());
+        CStr::from_ptr(input_c_char).to_str().unwrap()
+    };
+
+    match Glossary::open(input) {
+        Ok(glossary) => Box::into_raw(Box::new(glossary.sound_system().clone())) as *mut c_void,
+        Err(e) => {
+            errors::update_last_error(e);
+            ptr::null_mut()
+        }
+    }
+}
+
+/// Load a glossary
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+#[no_mangle]
+pub extern "C" fn lexibook_save_glossary(ptr: *mut c_void, file: *const c_char) -> u8 {
+    let sound_system = unsafe {
+        assert!(!ptr.is_null());
+        &mut *(ptr as *mut SoundSystem)
+    };
+    let filename = unsafe {
+        assert!(!file.is_null());
+        CStr::from_ptr(file).to_str().unwrap()
+    };
+
+    let result = Glossary::new(sound_system.clone()).save(filename);
+    match result {
+        Err(e) => {
+            errors::update_last_error(e);
+            0
+        }
+        _ => 1,
     }
 }
 

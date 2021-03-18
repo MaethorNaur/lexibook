@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
-import 'package:lexibook/bindings/lexibook.dart';
-import 'frequency.dart';
-import 'package:lexibook/helpers/display.dart';
 import 'package:optional/optional.dart';
 import 'package:lexibook/file_picker.dart' as FilePicker;
+
+import 'package:lexibook/helpers/display.dart';
+import 'package:lexibook/bindings/lexibook.dart';
+import 'package:lexibook/widgets/frequency.dart';
+import 'package:lexibook/widgets/menu.dart';
+import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -35,9 +38,25 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _openGlossary(String file) {
+    setState(() {
+      if (_soundSystem != null) {
+        _soundSystem.close();
+      }
+      try {
+        _soundSystem = SoundSystem.openGlossary(file);
+        _filename = file;
+        _words = [];
+      } catch (e) {
+        print("Error: $e");
+      }
+    });
+  }
+
   void _generateWords() {
     setState(() {
       _words = _soundSystem.generateWords(_numbers.toInt(), _frequency);
+      _words = _soundSystem.applyTransformations(_words);
     });
   }
 
@@ -46,6 +65,17 @@ class _HomeScreenState extends State<HomeScreen> {
     _scrollController.dispose();
     super.dispose();
   }
+
+  Widget _iconText(BuildContext context, {IconData icon, String text}) => Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Icon(icon),
+          Text(
+            text,
+            style: Display.mainText(context),
+          ),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -59,93 +89,72 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: NeumorphicTheme.baseColor(context),
       appBar: NeumorphicAppBar(
-        title: Text("Lexibook"),
-      ),
-      endDrawer: Drawer(
-        child: Container(
-          color: NeumorphicTheme.baseColor(context),
-          child: Column(
-            children: [
-              ConstrainedBox(
-                constraints: BoxConstraints.tightFor(
-                    height: NeumorphicAppBar.toolbarHeight),
-                child: NeumorphicAppBar(
-                  title: Text('Menu'),
-                  leading: NeumorphicCloseButton(),
-                  actions: <Widget>[
-                    NeumorphicButton(
-                      child: Icon(Icons.style),
-                      onPressed: () {},
-                    ),
-                    NeumorphicBackButton(forward: true),
-                  ],
-                ),
-              ),
-              Spacer(),
-            ],
-          ),
+        title: Text(
+          "Lexibook",
+          style: Display.mainText(context),
         ),
       ),
+      endDrawer: Menu(),
       body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-            Wrap(
-              spacing: 24.0,
-              runSpacing: 24.0,
-              children: <Widget>[
-                NeumorphicButton(
-                  margin: EdgeInsets.only(top: 12),
-                  onPressed: () {
-                    NeumorphicTheme.of(context).themeMode =
-                        NeumorphicTheme.isUsingDark(context)
-                            ? ThemeMode.light
-                            : ThemeMode.dark;
-                  },
-                  style: Display.flatRounded(),
-                  padding: const EdgeInsets.all(12.0),
-                  child: Text(
-                    "Toggle Theme",
+            Padding(
+              padding: EdgeInsets.all(10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                // spacing: 24.0,
+                // runSpacing: 24.0,
+                children: <Widget>[
+                  NeumorphicButton(
+                    margin: EdgeInsets.only(top: 12),
+                    onPressed: () async {
+                      Optional<String> maybePath =
+                          await FilePicker.openFilePath('wgl');
+                      maybePath.ifPresent((path) => _parseFile(path));
+                    },
+                    style: Display.flatRounded(),
+                    padding: const EdgeInsets.all(12.0),
+                    child: _iconText(context,
+                        icon: EvaIcons.downloadOutline, text: "Load file"),
+                  ),
+                  Spacer(),
+                  NeumorphicButton(
+                    margin: EdgeInsets.only(top: 12),
+                    onPressed: () async {
+                      Optional<String> maybePath =
+                          await FilePicker.openFilePath('glr');
+                      maybePath.ifPresent((path) => _openGlossary(path));
+                    },
+                    style: Display.flatRounded(),
+                    padding: const EdgeInsets.all(12.0),
+                    child: _iconText(context,
+                        icon: EvaIcons.downloadOutline, text: "Load glossary"),
+                  ),
+                  Spacer(),
+                  NeumorphicButton(
+                    margin: EdgeInsets.only(top: 12),
+                    onPressed: _soundSystem != null
+                        ? () async {
+                            Optional<String> maybePath =
+                                await FilePicker.saveFilePath('glr');
+                            maybePath
+                                .ifPresent((path) => _soundSystem.save(path));
+                          }
+                        : null,
+                    style: Display.flatRounded(),
+                    padding: const EdgeInsets.all(12.0),
+                    child: _iconText(context,
+                        icon: EvaIcons.saveOutline, text: "Save file"),
+                  ),
+                  Spacer(),
+                  Text(
+                    "$_filename",
                     style: Display.mainText(context),
                   ),
-                ),
-                NeumorphicButton(
-                  margin: EdgeInsets.only(top: 12),
-                  onPressed: () async {
-                    Optional<String> maybePath =
-                        await FilePicker.openFilePath('wgl');
-                    maybePath.ifPresent((path) => _parseFile(path));
-                  },
-                  style: Display.flatRounded(),
-                  padding: const EdgeInsets.all(12.0),
-                  child: Text(
-                    "Load file",
-                    style: Display.mainText(context),
-                  ),
-                ),
-                NeumorphicButton(
-                  margin: EdgeInsets.only(top: 12),
-                  onPressed: _soundSystem != null
-                      ? () async {
-                          Optional<String> maybePath =
-                              await FilePicker.saveFilePath('wgl');
-                          maybePath
-                              .ifPresent((path) => _soundSystem.save(path));
-                        }
-                      : null,
-                  style: Display.flatRounded(),
-                  padding: const EdgeInsets.all(12.0),
-                  child: Text(
-                    "Save file",
-                    style: Display.mainText(context),
-                  ),
-                ),
-                Text(
-                  "$_filename",
-                  style: Display.mainText(context),
-                ),
-              ],
+                ],
+              ),
             ),
             Padding(
               padding: EdgeInsets.all(10),

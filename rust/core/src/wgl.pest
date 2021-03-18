@@ -24,7 +24,7 @@ letter_distribution = { letter ~ (":" ~ number)? }
 number = @{
     "-"?
     ~ ("0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*)
-    ~ ("." ~ ASCII_DIGIT*)?
+    ~ (ASCII_DIGIT* ~ "." ~ ASCII_DIGIT*)?
 }
 
 letter = @{ (!(NEWLINE | WHITESPACE | ":" | "," | "\"") ~ ANY)+ }

@@ -18,14 +18,14 @@ class _WidgetInputScreen extends State<WidgetInputScreen> {
   @override
   void initState() {
     super.initState();
-        controller.text =  widget.initText;
+    controller.text = widget.initText;
   }
 
   @override
   Widget build(BuildContext context) => Neumorphic(
-        boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12)),
         style: NeumorphicStyle(
           shape: NeumorphicShape.flat,
+          boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12)),
         ),
         margin: EdgeInsets.all(16).copyWith(top: 8),
         padding: EdgeInsets.all(10),

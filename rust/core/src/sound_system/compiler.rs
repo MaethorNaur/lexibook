@@ -1,28 +1,29 @@
 use super::distribution::frequency;
 use super::phone::*;
 use super::{Condition, PhonemeCondition, PhonemeDifference, Rule, SoundSystem};
-use crate::wgl::{Environment, TransformationRule, AST};
+use crate::wgl::{Ast, Environment, TransformationRule};
 use std::collections::HashMap;
 use std::convert::{Into, TryFrom};
 
 impl SoundSystem {
-    pub fn compile(ast: AST<'_>) -> Self {
+    pub fn compile(ast: Ast) -> Self {
         let distribution = frequency(&ast.letters);
         let mut phonemes: HashMap<String, Vec<PhonemeCondition>> = ast
             .letters
             .iter()
-            .map(|(letters, _)| {
+            .map(|c| {
                 (
-                    (*letters).to_string(),
-                    vec![(convert_ipa_letters_to_sounds(letters), Condition::Always)],
+                    c.letter.clone(),
+                    vec![(convert_ipa_letters_to_sounds(&c.letter), Condition::Always)],
                 )
             })
             .collect();
         ast.phonemes
             .iter()
             .flat_map(|(letter, list)| list.iter().map(move |tuple| (letter, tuple)))
-            .for_each(|(letter, (phones, condition))| {
-                let phones = phones
+            .for_each(|(letter, phoneme)| {
+                let phones = phoneme
+                    .notation
                     .chars()
                     .filter_map(|c| Phone::try_from(c).ok())
                     .collect::<Vec<_>>();
@@ -31,14 +32,14 @@ impl SoundSystem {
                     .or_insert_with(Vec::new);
                 let mut new = true;
                 for (_, elem) in entry.iter_mut().enumerate() {
-                    if elem.1 == condition.clone().into() {
+                    if elem.1 == phoneme.condition.clone().into() {
                         *elem = (phones.clone(), elem.1.clone());
                         new = false;
                         break;
                     }
                 }
                 if new {
-                    entry.push((phones, condition.clone().into()));
+                    entry.push((phones, phoneme.condition.clone().into()));
                 }
             });
 
@@ -46,7 +47,7 @@ impl SoundSystem {
 
         let mut sorted_phonemes: Vec<_> = phonemes
             .iter()
-            .filter(|(repr, _)| ast.letters.iter().any(|(letter, _)| letter == repr))
+            .filter(|(repr, _)| ast.letters.iter().any(|c| &c.letter == *repr))
             .collect::<Vec<_>>();
         sorted_phonemes
             .sort_unstable_by(|(_, left), (_, right)| Ord::cmp(&right[0].0[0], &left[0].0[0]));
@@ -80,7 +81,7 @@ impl SoundSystem {
                     name: rule.to_string(),
                     phoneme_differences: rule_to_phoneme_differences(
                         &classes,
-                        rule.input(),
+                        &rule.input(),
                         rule.output(),
                     ),
                 },
@@ -100,7 +101,7 @@ impl SoundSystem {
 fn rule_to_phoneme_differences(
     classes: &HashMap<String, Vec<String>>,
     phoneme: &'_ str,
-    maybePhones: Option<&'_ str>,
+    maybePhones: Option<String>,
 ) -> Vec<PhonemeDifference> {
     let expanded = expand(classes, phoneme);
     trace!("phonemes expanded to: {:#?}", expanded);
@@ -169,7 +170,7 @@ fn convert_ipa_letters_to_sounds(letter: &str) -> Vec<Phone> {
         .collect()
 }
 
-fn rule_to_regex(classes: &HashMap<String, Vec<String>>, rule: &TransformationRule<'_>) -> String {
+fn rule_to_regex(classes: &HashMap<String, Vec<String>>, rule: &TransformationRule) -> String {
     let mut regex = String::new();
     let mut input = String::from("(?P<input>");
     rule.input().chars().for_each(|c| match c {

@@ -5,15 +5,19 @@ import 'types.dart';
 
 class _Bindings {
   DynamicLibrary lexibook;
-  void Function(int) init_logger;
-  Pointer<Utf8> Function() last_error_message;
-
-  Pointer<Void> Function(Pointer<Utf8>) parse_file;
-  Pointer<Void> Function(Pointer<Utf8>) parse_string;
-  void Function(Pointer<Void>) sound_system_free;
-  void Function(Pointer<StringList>) string_list_free;
-  Pointer<StringList> Function(Pointer<Void>, int, int) generate_words;
-  int Function(Pointer<Void>, Pointer<Utf8>) save_file;
+  void Function(int) initLogger;
+  Pointer<Utf8> Function() lastErrorMessage;
+  Pointer<Void> Function(Pointer<Utf8>) parseFile;
+  Pointer<Void> Function(Pointer<Utf8>) parseString;
+  Pointer<Void> Function(Pointer<Utf8>) openGlossary;
+  int Function(Pointer<Void>, Pointer<Utf8>)  saveGlossary;
+  Pointer<Void> Function(Pointer<Utf8>) fromJson;
+  void Function(Pointer<Void>) soundSystemFree;
+  void Function(Pointer<StringList>) stringListFree;
+  Pointer<StringList> Function(Pointer<Void>, int, int) generateWords;
+  Pointer<StringList> Function(Pointer<Void>, Pointer<StringList>) applyTransformations;
+  Pointer<Utf8> Function(Pointer<Void>, Pointer<Utf8>) getIpa;
+  int Function(Pointer<Void>, Pointer<Utf8>) saveFile;
 
   _Bindings() {
     lexibook = Platform.isAndroid
@@ -22,32 +26,60 @@ class _Bindings {
             ? DynamicLibrary.open("lexibook_ffi.dll")
             : DynamicLibrary.process());
 
-    init_logger = lexibook
+    initLogger = lexibook
         .lookup<NativeFunction<lexibook_init_logger_t>>('lexibook_init_logger')
         .asFunction();
-    last_error_message = lexibook
+
+    lastErrorMessage = lexibook
         .lookup<NativeFunction<last_error_message_t>>(
             'lexibook_last_error_message')
         .asFunction();
-    parse_file = lexibook
+
+    parseFile = lexibook
         .lookup<NativeFunction<parse_func_t>>('lexibook_parse_file')
         .asFunction();
-    parse_string = lexibook
+
+    parseString = lexibook
         .lookup<NativeFunction<parse_func_t>>('lexibook_parse_string')
         .asFunction();
-    sound_system_free = lexibook
+
+    fromJson = lexibook
+        .lookup<NativeFunction<parse_func_t>>('lexibook_from_json')
+        .asFunction();
+
+    openGlossary = lexibook
+        .lookup<NativeFunction<parse_func_t>>('lexibook_open_glossary')
+        .asFunction();
+
+    saveGlossary = lexibook
+        .lookup<NativeFunction<lexibook_save_file_t>>('lexibook_save_glossary')
+        .asFunction();
+    soundSystemFree = lexibook
         .lookup<NativeFunction<lexibook_sound_system_free_t>>(
             'lexibook_sound_system_free')
         .asFunction();
-    string_list_free = lexibook
+
+    stringListFree = lexibook
         .lookup<NativeFunction<lexibook_string_list_free_t>>(
             'lexibook_string_list_free')
         .asFunction();
-    generate_words = lexibook
+
+    generateWords = lexibook
         .lookup<NativeFunction<lexibook_generate_words_t>>(
             'lexibook_generate_words')
         .asFunction();
-    save_file = lexibook
+
+    applyTransformations = lexibook
+        .lookup<NativeFunction<lexibook_apply_transformations_t>>(
+            'lexibook_apply_transformations')
+        .asFunction();
+
+    getIpa = lexibook
+        .lookup<NativeFunction<lexibook_get_ipa_t>>(
+            'lexibook_get_ipa')
+        .asFunction();
+
+    saveFile = lexibook
         .lookup<NativeFunction<lexibook_save_file_t>>(
             'lexibook_sound_system_save_file')
         .asFunction();

@@ -8,12 +8,12 @@ license = 'MIT'
 repository = 'https://gitlab.com/lexibook/lexibook'
 
 [dependencies]
-log = '0.4.13'
-prettytable-rs = '^0.8'
-pest = '2.1.2'
-csv = '1.1.5'
+log = '0.4'
+prettytable-rs = '0.8'
+pest = '2.1'
+csv = '1.1'
 structopt = '0.3.21'
-clap-verbosity-flag = '0.3.1'
+clap-verbosity-flag = '0.3'
 
 [dependencies.lexibook]
 path = '../core'
@@ -24,8 +24,8 @@ features = ['colored']
 
 [build-dependencies]
 structopt = '0.3.21'
-clap-verbosity-flag = '0.3.1'
-log = '0.4.13'
+clap-verbosity-flag = '0.3'
+log = '0.4'
 
 [build-dependencies.lexibook]
 path = '../core'

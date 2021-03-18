@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:io';
 import 'package:path/path.dart' as Path;
 import 'package:optional/optional.dart';
-import 'package:file_chooser/file_chooser.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:file_picker/file_picker.dart';
 
-Future<Optional<String>> saveFilePath(String fileExtension)  {
+Future<Optional<String>> saveFilePath(String fileExtension) {
   if (Platform.isAndroid || Platform.isIOS || Platform.isFuchsia) {
     return _saveFileMobile(fileExtension: fileExtension);
   } else {
@@ -22,39 +22,31 @@ Future<Optional<String>> openFilePath(String fileExtension) {
 }
 
 Future<Optional<String>> _selectFileDesktop({String fileExtension}) {
-  return showOpenPanel(
-          allowedFileTypes: (_parseExtension(fileExtension) == null)
-              ? null
-              : [
-                  FileTypeFilterGroup(
-                      label: 'file',
-                      fileExtensions: _parseExtension(fileExtension))
-                ])
-      .then((file) =>
-          Optional.ofNullable(file.paths.isEmpty ? null : file.paths.first));
+  XTypeGroup group =
+      XTypeGroup(label: "wgl", extensions: _parseExtension(fileExtension));
+  return openFile(acceptedTypeGroups: [group])
+      .then((file) => Optional.ofNullable(file).map((file) => file.path));
 }
 
 Future<Optional<String>> _saveFileDesktop({String fileExtension}) {
-  return showSavePanel(
-          allowedFileTypes: (_parseExtension(fileExtension) == null)
-              ? null
-              : [
-                  FileTypeFilterGroup(
-                      label: 'files',
-                      fileExtensions: _parseExtension(fileExtension))
-                ])
-      .then((file) =>
-          Optional.ofNullable(file.paths.isEmpty ? null : file.paths.first));
+  XTypeGroup group =
+      XTypeGroup(label: "wgl", extensions: _parseExtension(fileExtension));
+ 
+  return getSavePath(acceptedTypeGroups: [group])
+      .then((file) => Optional.ofNullable(file));
 }
 
 Future<Optional<String>> _selectFileMobile({String fileExtension}) {
-  return FilePicker.getFilePath(
-    type: FileType.any,
-  ).then((path) => Optional.ofNullable(path));
+  return FilePicker.platform
+      .pickFiles(
+        type: FileType.any,
+      )
+      .then((result) => Optional.ofNullable(result)
+          .map((result) => result.files.single.path));
 }
 
 Future<Optional<String>> _saveFileMobile({String fileExtension}) {
-  return FilePicker.getDirectoryPath().then((path) {
+  return FilePicker.platform.getDirectoryPath().then((path) {
     print(path);
     return Optional.ofNullable(
         path != null ? Path.join(path, "file.wgl") : null);

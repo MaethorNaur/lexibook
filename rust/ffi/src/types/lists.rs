@@ -1,5 +1,5 @@
 use std::convert::From;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
 #[repr(C)]
@@ -31,9 +31,31 @@ impl StringList {
                 if ptr.is_null() {
                     continue;
                 }
+
                 let _ = CString::from_raw(*ptr as *mut c_char);
             }
         }
+    }
+    pub fn to_vec(&self) -> Vec<String> {
+        let mut result = Vec::new();
+        unsafe {
+            let v: Vec<*const c_char> = Vec::from_raw_parts(
+                self.items as *mut *const c_char,
+                self.length as usize,
+                self.length as usize,
+            );
+            for ptr in &v {
+                if ptr.is_null() {
+                    continue;
+                }
+                let str = CStr::from_ptr(*ptr as *mut c_char)
+                    .to_str()
+                    .unwrap()
+                    .to_string();
+                result.push(str);
+            }
+        }
+        result
     }
 }
 

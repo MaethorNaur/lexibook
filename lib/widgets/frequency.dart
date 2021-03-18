@@ -4,7 +4,7 @@ import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:lexibook/bindings/lexibook.dart';
 import 'package:lexibook/helpers/display.dart';
 
-class FrequencyWidget extends StatefulWidget {
+class FrequencyWidget extends StatelessWidget {
   final ValueChanged<MonoSyllableRepartition> callback;
   final MonoSyllableRepartition defaultValue;
   const FrequencyWidget({
@@ -13,21 +13,10 @@ class FrequencyWidget extends StatefulWidget {
     @required this.callback,
   }) : super(key: key);
 
-  _FrequencyState createState() => _FrequencyState();
-}
-
-class _FrequencyState extends State<FrequencyWidget> {
-  int repartition;
-
-  @override
-  void initState() {
-    super.initState();
-    repartition = widget.defaultValue.index;
-  }
-
   @override
   Widget build(BuildContext context) {
-    Iterable<Widget> children = MonoSyllableRepartition.values.map((value) {
+    List<ToggleElement> children =
+        MonoSyllableRepartition.values.map((value) {
       String name;
       switch (value) {
         case MonoSyllableRepartition.LessFrequent:
@@ -49,21 +38,20 @@ class _FrequencyState extends State<FrequencyWidget> {
           name = "Frequent";
           break;
       }
-      return NeumorphicRadio(
-          groupValue: repartition,
-          value: value.index,
-          onChanged: (value) {
-            setState(() => repartition = value);
-            widget.callback(MonoSyllableRepartition.values[value]);
-          },
-          style: NeumorphicRadioStyle(
-            boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(8)),
-          ),
-          padding: const EdgeInsets.all(12.0),
+      return ToggleElement(
+        background: Center(
           child: Text(
             name,
             style: Display.mainText(context),
-          ));
+          ),
+        ),
+        foreground: Center(
+          child: Text(
+            name,
+            style: Display.mainText(context),
+          ),
+        ),
+      );
     }).toList();
 
     return Padding(
@@ -77,7 +65,19 @@ class _FrequencyState extends State<FrequencyWidget> {
             style: Display.mainText(context),
           ),
           SizedBox(width: 12),
-        ]..addAll(children),
+          NeumorphicToggle(
+              selectedIndex: defaultValue.index,
+              thumb: Neumorphic(
+                style: NeumorphicStyle(
+                  boxShape: NeumorphicBoxShape.roundRect(
+                      BorderRadius.all(Radius.circular(12))),
+                ),
+              ),
+              onChanged: (value) {
+                callback(MonoSyllableRepartition.values[value]);
+              },
+              children: children),
+        ],
       ),
     );
   }

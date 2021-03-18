@@ -19,7 +19,7 @@ pub enum MonoSyllableRepartition {
     Never,
 }
 
-#[derive(Default, Debug, Serialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct SoundSystem {
     classes: HashMap<String, Vec<String>>,
     phonemes: HashMap<String, Vec<PhonemeCondition>>,
@@ -29,7 +29,7 @@ pub struct SoundSystem {
     rules: Vec<Rule>,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Rule {
     SoundRule {
         name: String,
@@ -42,14 +42,14 @@ pub enum Rule {
     },
 }
 
-#[derive(Debug, Serialize, Eq, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub enum PhonemeDifference {
     Skip,
     Delete(String),
     Upsert(String, phone::Phones),
 }
 
-#[derive(Debug, Serialize, Eq, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub enum Condition {
     Always,
     Single(ConditionType),
@@ -78,7 +78,7 @@ impl Ord for Condition {
         self.partial_cmp(other).unwrap_or(Ordering::Less)
     }
 }
-impl<'a> Into<Condition> for wgl::Condition<'a> {
+impl Into<Condition> for wgl::Condition {
     fn into(self) -> Condition {
         match self {
             wgl::Condition::Always => Condition::Always,
@@ -97,13 +97,14 @@ impl<'a> Into<Condition> for wgl::Condition<'a> {
         }
     }
 }
-#[derive(Debug, Serialize, Eq, PartialEq, Clone)]
+
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub enum ConditionOperand {
     And,
     Or,
 }
 
-#[derive(Debug, Serialize, Eq, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub enum ConditionType {
     None,
     BeginningWord,
@@ -112,7 +113,7 @@ pub enum ConditionType {
     Between(String, String),
 }
 
-impl<'a> Into<ConditionType> for wgl::ConditionType<'a> {
+impl Into<ConditionType> for wgl::ConditionType {
     fn into(self) -> ConditionType {
         match self {
             wgl::ConditionType::None => ConditionType::None,
@@ -157,6 +158,9 @@ impl SoundSystem {
         &self.phonemes_sorted
     }
 
+    pub fn phonemes_non_mut(&self) -> &HashMap<String, Vec<PhonemeCondition>> {
+        &self.phonemes
+    }
     pub fn phonemes(&mut self) -> &mut HashMap<String, Vec<PhonemeCondition>> {
         &mut self.phonemes
     }

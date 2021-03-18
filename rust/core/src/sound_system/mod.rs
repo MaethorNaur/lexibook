@@ -15,19 +15,110 @@ pub fn from_string(input: &'_ str) -> Result<SoundSystem, Error<wgl::Rule>> {
     wgl::from_string(input).map(SoundSystem::compile)
 }
 
+pub fn from_json(input: &'_ str) -> Result<SoundSystem, serde_json::Error> {
+    wgl::from_json(input).map(SoundSystem::compile)
+}
+
 impl fmt::Display for SoundSystem {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "letters: ")?;
         let letters = self
             .distribution()
             .iter()
-            .map(|(letter, _)| letter.to_string())
+            .map(|(letter, freq)| {
+                if *freq == 0.0 {
+                    letter.to_string()
+                } else {
+                    format!("{}:{}", letter, freq)
+                }
+            })
             .collect::<Vec<_>>()
-            .join(" ");
-        writeln!(f, "{}", &letters)
+            .join(", ");
+        writeln!(f, "{}", &letters)?;
+        writeln!(f)?;
+        writeln!(f, "phonemes:")?;
+        for (key, conditions) in self.phonemes_non_mut().iter() {
+            for (phonemes, condition) in conditions.iter() {
+                let phonemesStr: String = phonemes
+                    .iter()
+                    .map(|p| p.clone().to_string())
+                    .collect::<Vec<_>>()
+                    .join("");
+                writeln!(f, "  {} /{}/ {}", key, phonemesStr, condition)?;
+            }
+        }
+        for (className, letters) in self.classes().iter() {
+            writeln!(f)?;
+            writeln!(f, "{} = {}", className, letters.join(""))?;
+        }
+
+        writeln!(f)?;
+        writeln!(
+            f,
+            "syllables: {}",
+            self.syllables()
+                .iter()
+                .map(|s| s.join(""))
+                .collect::<Vec<_>>()
+                .join(" ")
+        )?;
+
+        writeln!(f)?;
+        writeln!(f, "rules:")?;
+        for rule in self.rules().iter() {
+            writeln!(f, "{}", rule)?;
+        }
+        Ok(())
     }
 }
 
+impl fmt::Display for Condition {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Condition::Always => write!(f, ""),
+            Condition::Single(conditionType) => conditionType.fmt(f),
+            Condition::Not(conditionType) => write!(f, "NOT {}", conditionType),
+            Condition::Binary {
+                operand,
+                left,
+                right,
+            } => write!(f, "{} {} {}", left, operand, right),
+        }
+    }
+}
+
+impl fmt::Display for ConditionOperand {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let op = match self {
+            ConditionOperand::And => "AND",
+            ConditionOperand::Or => "OR",
+        };
+        write!(f, "{}", op)
+    }
+}
+
+impl fmt::Display for ConditionType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ConditionType::None => write!(f, ""),
+            ConditionType::BeginningWord => write!(f, "at the beginning of word"),
+            ConditionType::EndWord => write!(f, "at the end of word"),
+            ConditionType::Between(l, r) => write!(f, "between \"{}\" and \"{}\"", l, r),
+            ConditionType::FollowedBy(c) => write!(f, "followed by \"{}\"", c),
+        }
+    }
+}
+
+impl fmt::Display for Rule {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match self {
+            Rule::SoundRule { name, .. } => name,
+            Rule::PhonemeRule { name, .. } => name,
+        };
+
+        write!(f, "{}", name)
+    }
+}
 impl SoundSystem {
     fn add_phonemes(&mut self, repr: &'_ str, phones: phone::Phones) {
         self.phonemes()
