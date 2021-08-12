@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'bindings.dart';
@@ -18,9 +19,13 @@ enum MonoSyllableRepartition {
   Rare,
   Never,
 }
-
+var _bindings = Bindings(Platform.isAndroid
+        ? DynamicLibrary.open("liblexibook_ffi.so")
+        : (Platform.isWindows
+            ? DynamicLibrary.open("lexibook_ffi.dll")
+            : DynamicLibrary.process()));
 void initLogger(LogLevel level) {
-  bindings.init_logger(level.index);
+  _bindings.lexibook_init_logger(level.index);
 }
 
 class SoundSystem {
@@ -30,53 +35,53 @@ class SoundSystem {
   }
 
   static SoundSystem parseFile(String input) {
-    var utf8Input = Utf8.toUtf8(input);
-    var ptr = bindings.parse_file(utf8Input);
-    free(utf8Input);
+    var utf8Input = input.toNativeUtf8().cast<Int8>();
+    var ptr = _bindings.lexibook_parse_file(utf8Input);
+    calloc.free(utf8Input);
     if (ptr.address == nullptr.address) {
-      var error = bindings.last_error_message();
-      throw Utf8.fromUtf8(error);
+      var error = _bindings.lexibook_last_error_message();
+      throw error.cast<Utf8>().toDartString();
     }
     return SoundSystem._(ptr);
   }
 
   static SoundSystem parseString(String input) {
-    var utf8Input = Utf8.toUtf8(input);
-    var ptr = bindings.parse_string(utf8Input);
-    free(utf8Input);
+    var utf8Input = input.toNativeUtf8().cast<Int8>();
+    var ptr = _bindings.lexibook_parse_string(utf8Input);
+    calloc.free(utf8Input);
     if (ptr.address == nullptr.address) {
-      var error = bindings.last_error_message();
-      throw Utf8.fromUtf8(error);
+      var error = _bindings.lexibook_last_error_message();
+      throw error.cast<Utf8>().toDartString();
     }
     return SoundSystem._(ptr);
   }
 
   List<String> generateWords(int numbers, MonoSyllableRepartition frequency) {
-    var list = bindings.generate_words(_ptr, numbers, frequency.index);
+    var list = _bindings.lexibook_generate_words(_ptr, numbers, frequency.index);
     var items = list.ref.items.cast<IntPtr>();
 
-    List<String> result = List(list.ref.length);
+    List<String> result = List.filled(list.ref.length,"");
     for (int i = 0; i < list.ref.length; i++) {
-      var string = Utf8.fromUtf8(Pointer.fromAddress(items[i]));
+      var string = Pointer.fromAddress(items[i]).cast<Utf8>().toDartString();
       result[i] = string;
     }
-    bindings.string_list_free(list);
+    _bindings.lexibook_string_list_free(list);
     return result;
   }
 
   void save(String filename) {
-    var utf8Input = Utf8.toUtf8(filename);
-    var result = bindings.save_file(_ptr, utf8Input);
-    free(utf8Input);
+    var utf8Input = filename.toNativeUtf8().cast<Int8>();
+    var result = _bindings.lexibook_sound_system_save_file(_ptr, utf8Input);
+    calloc.free(utf8Input);
     if (result == 0) {
-      var lastErrorPtr = bindings.last_error_message();
-      var lastError = Utf8.fromUtf8(lastErrorPtr);
-      free(lastErrorPtr);
+      var lastErrorPtr = _bindings.lexibook_last_error_message();
+      var lastError = lastErrorPtr.cast<Utf8>().toDartString();
+      calloc.free(lastErrorPtr);
       throw Exception(lastError);
     }
   }
 
   void close() {
-    bindings.sound_system_free(_ptr);
+    _bindings.lexibook_sound_system_free(_ptr);
   }
 }

@@ -15,7 +15,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<String> _words = [];
   double _numbers = 10;
-  SoundSystem _soundSystem;
+  SoundSystem? _soundSystem;
   MonoSyllableRepartition _frequency = MonoSyllableRepartition.LessFrequent;
   String _filename = "";
   final ScrollController _scrollController = ScrollController();
@@ -23,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _parseFile(String file) {
     setState(() {
       if (_soundSystem != null) {
-        _soundSystem.close();
+        _soundSystem?.close();
       }
       try {
         _soundSystem = SoundSystem.parseFile(file);
@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _generateWords() {
     setState(() {
-      _words = _soundSystem.generateWords(_numbers.toInt(), _frequency);
+      _words = _soundSystem!.generateWords(_numbers.toInt(), _frequency);
     });
   }
 
@@ -98,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 NeumorphicButton(
                   margin: EdgeInsets.only(top: 12),
                   onPressed: () {
-                    NeumorphicTheme.of(context).themeMode =
+                    NeumorphicTheme.of(context)?.themeMode =
                         NeumorphicTheme.isUsingDark(context)
                             ? ThemeMode.light
                             : ThemeMode.dark;
@@ -113,9 +113,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 NeumorphicButton(
                   margin: EdgeInsets.only(top: 12),
                   onPressed: () async {
-                    Optional<String> maybePath =
-                        await FilePicker.openFilePath('wgl');
-                    maybePath.ifPresent((path) => _parseFile(path));
+                    String? maybePath =
+                        await FilePicker.openFilePath();
+                    if(maybePath != null) {
+                      _parseFile(maybePath);
+                    }
                   },
                   style: Display.flatRounded(),
                   padding: const EdgeInsets.all(12.0),
@@ -128,10 +130,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   margin: EdgeInsets.only(top: 12),
                   onPressed: _soundSystem != null
                       ? () async {
-                          Optional<String> maybePath =
-                              await FilePicker.saveFilePath('wgl');
-                          maybePath
-                              .ifPresent((path) => _soundSystem.save(path));
+                          String? maybePath = await FilePicker.saveFilePath();
+                          if(maybePath != null) {_soundSystem?.save(maybePath);}
                         }
                       : null,
                   style: Display.flatRounded(),
@@ -211,7 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: NeumorphicIcon(
           Icons.keyboard_return,
           style: NeumorphicStyle(
-              color: NeumorphicTheme.of(context).current.accentColor),
+              color: NeumorphicTheme.of(context)?.current?.accentColor),
         ),
       ),
     );

@@ -8,16 +8,16 @@ class FrequencyWidget extends StatefulWidget {
   final ValueChanged<MonoSyllableRepartition> callback;
   final MonoSyllableRepartition defaultValue;
   const FrequencyWidget({
-    Key key,
-    @required this.defaultValue,
-    @required this.callback,
+    Key? key,
+    required this.defaultValue,
+    required this.callback,
   }) : super(key: key);
 
   _FrequencyState createState() => _FrequencyState();
 }
 
 class _FrequencyState extends State<FrequencyWidget> {
-  int repartition;
+  int? repartition;
 
   @override
   void initState() {
@@ -52,9 +52,11 @@ class _FrequencyState extends State<FrequencyWidget> {
       return NeumorphicRadio(
           groupValue: repartition,
           value: value.index,
-          onChanged: (value) {
+          onChanged: (int? value) {
+            if(value != null) {
             setState(() => repartition = value);
             widget.callback(MonoSyllableRepartition.values[value]);
+}
           },
           style: NeumorphicRadioStyle(
             boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(8)),
