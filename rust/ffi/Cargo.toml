@@ -17,7 +17,7 @@ crate-type = [
 [dependencies]
 log = '0.4.14'
 lazy_static = '1.4.0'
-simple_logger = '1.13.0'
+simple_logger = '1.16.0'
 pest = '2.1.2'
 
 [dependencies.lexibook]
