@@ -13,7 +13,7 @@ prettytable-rs = '^0.8'
 pest = '2.1.2'
 csv = '1.1.6'
 structopt = '0.3.22'
-clap-verbosity-flag = '0.3.2'
+clap-verbosity-flag = '1.0.1'
 
 [dependencies.lexibook]
 path = '../core'
@@ -24,7 +24,7 @@ features = ['colored']
 
 [build-dependencies]
 structopt = '0.3.22'
-clap-verbosity-flag = '0.3.2'
+clap-verbosity-flag = '1.0.1'
 log = '0.4.14'
 
 [build-dependencies.lexibook]
