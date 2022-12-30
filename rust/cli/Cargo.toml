@@ -9,7 +9,7 @@ repository = 'https://gitlab.com/lexibook/lexibook'
 
 [dependencies]
 log = '0.4.14'
-prettytable-rs = '^0.8'
+prettytable-rs = '^0.10'
 pest = '2.1.2'
 csv = '1.1.6'
 structopt = '0.3.22'
